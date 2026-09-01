@@ -222,18 +222,13 @@ router.post('/:id/send-email', async (req, res) => {
     return res.status(404).json({ error: 'Birthday person not found' });
   }
 
-  const recipients = db.prepare('SELECT * FROM recipients WHERE birthday_id = ?').all(id);
-  if (recipients.length === 0) {
-    return res.status(400).json({ error: `No email recipients configured for ${birthday.name}. Add recipients in the Admin Dashboard.` });
-  }
-
-  const daysUntil = calculateDaysUntil(birthday.date);
-  const result = await emailService.sendBirthdayReminder(birthday, recipients, daysUntil, message);
+  const daysUntil = emailService.calculateDaysUntil(birthday.date);
+  const result = await emailService.sendBirthdayReminder(birthday, [], daysUntil, message);
 
   if (result.success) {
-    res.json({ success: true, message: `Celebration email sent automatically to ${recipients.length} recipient${recipients.length > 1 ? 's' : ''}!` });
+    res.json({ success: true, message: `Celebration email dispatched to ${result.recipientCount} circle recipient${result.recipientCount !== 1 ? 's' : ''}!` });
   } else {
-    res.status(500).json({ error: result.error || 'Failed to send email. Please check SMTP settings in Admin.' });
+    res.status(500).json({ error: result.error || 'Failed to dispatch email. Please check your Resend/SMTP settings in Admin.' });
   }
 });
 
