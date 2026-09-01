@@ -79,12 +79,25 @@ function initAdminAccount() {
       db.prepare('INSERT INTO admin (username, password_hash) VALUES (?, ?)').run(defaultUsername, passwordHash);
       console.log(`[Database] Initialized default admin credentials: ${defaultUsername}`);
     } else if (process.env.ADMIN_PASSWORD) {
-      // Sync password if explicitly set in environment variables on cloud host
       const passwordHash = bcrypt.hashSync(process.env.ADMIN_PASSWORD, 10);
       db.prepare('UPDATE admin SET password_hash = ? WHERE username = ?').run(passwordHash, defaultUsername);
     }
   } catch (err) {
     console.error('[Database] Error provisioning admin credentials:', err.message);
+  }
+}
+
+// Initial default settings initialization (Resend API key + sender email)
+function initDefaultSettings() {
+  try {
+    const insertOrIgnore = db.prepare("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)");
+    if (process.env.RESEND_API_KEY) {
+      insertOrIgnore.run('resend_api_key', process.env.RESEND_API_KEY);
+    }
+    insertOrIgnore.run('from_email', process.env.FROM_EMAIL || 'celebrate@zen.ai');
+    insertOrIgnore.run('from_name', process.env.FROM_NAME || 'Zenitude Celebrations');
+  } catch (err) {
+    console.error('[Database] Error provisioning default settings:', err.message);
   }
 }
 
@@ -118,6 +131,7 @@ function initSampleData() {
 }
 
 initAdminAccount();
+initDefaultSettings();
 initSampleData();
 
 module.exports = db;

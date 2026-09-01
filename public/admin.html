@@ -367,17 +367,34 @@
       <section id="settings-section" class="content-section hidden">
         <div class="settings-grid-layout">
           
-          <!-- SMTP Config Card -->
+          <!-- Email Service Config Card -->
           <div class="settings-card">
             <div class="card-header-styled">
-              <h3>📧 SMTP Server Configuration</h3>
-              <p>Configure your outbound email server credentials for automatic daily 07:00 AM dispatch.</p>
+              <h3>📧 Email Dispatch & Resend Configuration</h3>
+              <p>Configure Resend API (recommended for Render cloud) or traditional SMTP credentials.</p>
             </div>
             
             <form id="settings-form">
               <div class="form-grid">
+                
+                <div class="input-group full-width" style="background: rgba(255, 107, 107, 0.05); padding: 16px; border-radius: 12px; border: 1px solid rgba(255, 107, 107, 0.15);">
+                  <label for="resend_api_key" style="font-weight: 700; color: var(--primary);">⚡ Resend API Key (Cloud Ready)</label>
+                  <input type="password" id="resend_api_key" name="resend_api_key" placeholder="re_123456789...">
+                  <span class="field-hint" style="margin-top: 4px; display: block; font-size: 0.78rem;">Uses Resend's HTTPS API for reliable instant delivery without cloud port blocking.</span>
+                </div>
+
                 <div class="input-group">
-                  <label for="smtp_host">SMTP Host</label>
+                  <label for="from_email">Sender "From" Email</label>
+                  <input type="email" id="from_email" name="from_email" placeholder="celebrate@zen.ai">
+                </div>
+
+                <div class="input-group">
+                  <label for="from_name">Sender "From" Display Name</label>
+                  <input type="text" id="from_name" name="from_name" placeholder="Zenitude Celebrations">
+                </div>
+
+                <div class="input-group">
+                  <label for="smtp_host">SMTP Host (Optional)</label>
                   <input type="text" id="smtp_host" name="smtp_host" placeholder="smtp.gmail.com">
                 </div>
                 <div class="input-group">
@@ -395,17 +412,9 @@
                   <label for="smtp_user">SMTP Username / Email</label>
                   <input type="text" id="smtp_user" name="smtp_user" placeholder="your-email@gmail.com">
                 </div>
-                <div class="input-group">
+                <div class="input-group full-width">
                   <label for="smtp_pass">SMTP App Password</label>
                   <input type="password" id="smtp_pass" name="smtp_pass" placeholder="••••••••••••••••">
-                </div>
-                <div class="input-group">
-                  <label for="from_email">Sender "From" Email</label>
-                  <input type="email" id="from_email" name="from_email" placeholder="celebrations@zenitude.com">
-                </div>
-                <div class="input-group full-width">
-                  <label for="from_name">Sender "From" Display Name</label>
-                  <input type="text" id="from_name" name="from_name" placeholder="Zenitude Celebrations">
                 </div>
               </div>
               <div class="form-actions" style="margin-top: 24px;">

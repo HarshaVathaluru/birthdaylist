@@ -3,6 +3,7 @@ const cron = require('node-cron');
 const db = require('../db');
 const path = require('path');
 const fs = require('fs');
+const { Resend } = require('resend');
 
 function getEmailConfig() {
   const settingsArray = db.prepare('SELECT * FROM settings').all();
@@ -11,12 +12,20 @@ function getEmailConfig() {
     settingsObj[row.key] = row.value;
   }
   
+  const resendApiKey = process.env.RESEND_API_KEY || settingsObj.resend_api_key || '';
+  const fromEmail = process.env.FROM_EMAIL || settingsObj.from_email || 'celebrate@zen.ai';
+  const fromName = process.env.FROM_NAME || settingsObj.from_name || 'Zenitude Celebrations';
+
   return {
+    provider: resendApiKey ? 'resend' : 'smtp',
+    resendApiKey: resendApiKey,
+    fromEmail: fromEmail,
+    fromName: fromName,
+    fromFormatted: `${fromName} <${fromEmail}>`,
     host: process.env.SMTP_HOST || settingsObj.smtp_host,
     port: parseInt(process.env.SMTP_PORT || settingsObj.smtp_port || '587', 10),
     user: process.env.SMTP_USER || settingsObj.smtp_user,
     pass: process.env.SMTP_PASS || settingsObj.smtp_pass,
-    from: process.env.SMTP_FROM || settingsObj.from_email || settingsObj.smtp_user || 'Zenitude Celebrations <noreply@zenitude.local>',
     masterReminder: settingsObj.master_reminder !== 'false'
   };
 }
@@ -146,7 +155,7 @@ function generateBirthdayPersonWishEmailHtml(birthday, customMessage = null) {
                   <td width="76" align="center" valign="middle" style="padding-right: 18px;">
                     ${birthday.photo ? `
                       <div style="width: 72px; height: 72px; border-radius: 50%; border: 3px solid #FF8E53; overflow: hidden; box-shadow: 0 4px 12px rgba(255,142,83,0.25);">
-                        <img src="cid:birthdayphoto" alt="${celebrantName}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+                        <img src="${birthday.photo.startsWith('http') ? birthday.photo : 'cid:birthdayphoto'}" alt="${celebrantName}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
                       </div>
                     ` : `
                       <div style="width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #FF6B6B, #FF8E53); color: #FFFFFF; font-size: 26px; font-weight: 800; line-height: 72px; text-align: center; box-shadow: 0 4px 12px rgba(255,107,107,0.25);">
@@ -262,9 +271,6 @@ function generateCircleIntimationEmailHtml(birthday, daysUntil, recipientName = 
   const chatUrl = `http://localhost:3000/chat?recipient=${encodeURIComponent(celebrantName)}`;
   const homeUrl = `http://localhost:3000/`;
 
-  // Action Buttons Layout:
-  // If today: Show "Post Wish in Circle Chat" and "Check More on Zenitude"
-  // If 2-day advance: Do NOT show chat; show "Add to Calendar" and "Check More on Zenitude"
   let actionButtonsHtml = '';
   if (isToday) {
     actionButtonsHtml = `
@@ -371,7 +377,7 @@ function generateCircleIntimationEmailHtml(birthday, daysUntil, recipientName = 
                   <td width="72" align="center" valign="middle" style="padding-right: 18px;">
                     ${birthday.photo ? `
                       <div style="width: 68px; height: 68px; border-radius: 50%; border: 3px solid #4F46E5; overflow: hidden; box-shadow: 0 4px 12px rgba(79,70,229,0.2);">
-                        <img src="cid:birthdayphoto" alt="${celebrantName}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+                        <img src="${birthday.photo.startsWith('http') ? birthday.photo : 'cid:birthdayphoto'}" alt="${celebrantName}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
                       </div>
                     ` : `
                       <div style="width: 68px; height: 68px; border-radius: 50%; background: linear-gradient(135deg, #4F46E5, #06B6D4); color: #FFFFFF; font-size: 24px; font-weight: 800; line-height: 68px; text-align: center; box-shadow: 0 4px 12px rgba(79,70,229,0.2);">
@@ -434,6 +440,78 @@ function generateCircleIntimationEmailHtml(birthday, daysUntil, recipientName = 
 }
 
 // ============================================================================
+// UNIFIED EMAIL DISPATCH (Resend HTTPS API with SMTP fallback)
+// ============================================================================
+async function sendSingleEmailMessage({ to, subject, html, attachments = [] }) {
+  const config = getEmailConfig();
+
+  // 1. Resend API Dispatch
+  if (config.resendApiKey) {
+    const resend = new Resend(config.resendApiKey);
+
+    const resendAttachments = [];
+    if (Array.isArray(attachments)) {
+      for (const att of attachments) {
+        if (att.path && fs.existsSync(att.path)) {
+          const content = fs.readFileSync(att.path);
+          resendAttachments.push({
+            filename: att.filename,
+            content: content
+          });
+        }
+      }
+    }
+
+    try {
+      const response = await resend.emails.send({
+        from: config.fromFormatted,
+        to: Array.isArray(to) ? to : [to],
+        subject: subject,
+        html: html,
+        attachments: resendAttachments.length > 0 ? resendAttachments : undefined
+      });
+
+      if (response.error) {
+        // If domain celebrate@zen.ai is not yet verified on Resend, retry with onboarding@resend.dev
+        const errMsg = response.error.message || '';
+        if (errMsg.includes('domain') || errMsg.includes('verify') || errMsg.includes('validation')) {
+          console.warn(`[Resend] Domain ${config.fromEmail} unverified, retrying with onboarding@resend.dev...`);
+          const fallback = await resend.emails.send({
+            from: `Zenitude Celebrations <onboarding@resend.dev>`,
+            to: Array.isArray(to) ? to : [to],
+            subject: subject,
+            html: html,
+            attachments: resendAttachments.length > 0 ? resendAttachments : undefined
+          });
+          if (fallback.error) throw new Error(fallback.error.message);
+          return fallback;
+        }
+        throw new Error(errMsg);
+      }
+
+      return response;
+    } catch (err) {
+      console.error('[Resend Dispatch Error]', err.message);
+      throw err;
+    }
+  }
+
+  // 2. Fallback to Nodemailer SMTP
+  const transporter = createTransport();
+  if (!transporter) {
+    throw new Error('No email provider configured. Please check your Resend API key or SMTP settings in Admin.');
+  }
+
+  return await transporter.sendMail({
+    from: config.fromFormatted,
+    to: to,
+    subject: subject,
+    html: html,
+    attachments: attachments
+  });
+}
+
+// ============================================================================
 // RECIPIENT RESOLUTION & DISPATCH LOGIC
 // ============================================================================
 function getAllCircleRecipients(specificRecipients = []) {
@@ -476,12 +554,6 @@ function getAllCircleRecipients(specificRecipients = []) {
 }
 
 async function sendBirthdayReminder(birthday, recipients = [], daysUntil, customMessage = null) {
-  const transporter = createTransport();
-  if (!transporter) {
-    console.error('Email transporter not configured properly.');
-    return { success: false, error: 'SMTP configuration missing or invalid' };
-  }
-
   const config = getEmailConfig();
   const contacts = getAllCircleRecipients(recipients);
 
@@ -509,7 +581,6 @@ async function sendBirthdayReminder(birthday, recipients = [], daysUntil, custom
   let successCount = 0;
   const celebrantCleanName = (birthday.name || '').trim().toLowerCase();
 
-  // Send tailored emails: VIP letterhead template for Celebrant, Intimation letterhead for Circle Members
   for (const contact of contacts) {
     const contactName = (contact.name || '').trim();
     const isBirthdayPerson = (
@@ -538,32 +609,26 @@ async function sendBirthdayReminder(birthday, recipients = [], daysUntil, custom
       htmlContent = generateCircleIntimationEmailHtml(birthday, daysUntil, contact.name, customMessage);
     }
 
-    const mailOptions = {
-      from: config.from,
-      to: contact.name ? `"${contact.name}" <${contact.email}>` : contact.email,
-      subject: subject,
-      html: htmlContent,
-      attachments: attachments
-    };
+    const recipientAddress = contact.name ? `"${contact.name}" <${contact.email}>` : contact.email;
 
     try {
-      await transporter.sendMail(mailOptions);
+      await sendSingleEmailMessage({
+        to: recipientAddress,
+        subject: subject,
+        html: htmlContent,
+        attachments: attachments
+      });
       successCount++;
     } catch (err) {
       console.error(`[Email Service] Failed sending to ${contact.email}:`, err.message);
     }
   }
 
-  console.log(`[Email Service] Dispatched tailored professional emails for ${birthday.name} to ${successCount}/${contacts.length} recipients.`);
+  console.log(`[Email Service] Dispatched tailored professional emails for ${birthday.name} to ${successCount}/${contacts.length} recipients via ${config.provider.toUpperCase()}.`);
   return { success: true, recipientCount: successCount };
 }
 
 async function sendTestEmail(targetEmail) {
-  const transporter = createTransport();
-  if (!transporter) {
-    throw new Error('SMTP credentials not configured. Please check your Email & SMTP settings.');
-  }
-
   const config = getEmailConfig();
   const mockBirthday = {
     name: 'Aarav Sharma',
@@ -574,15 +639,13 @@ async function sendTestEmail(targetEmail) {
 
   const htmlContent = generateCircleIntimationEmailHtml(mockBirthday, 0, 'Valued Member');
 
-  const mailOptions = {
-    from: config.from,
-    to: targetEmail || config.user,
+  const result = await sendSingleEmailMessage({
+    to: targetEmail || 'delivered@resend.dev',
     subject: '🧪 [Zenitude Test] Professional Circle Celebration Notice',
     html: htmlContent
-  };
+  });
 
-  const info = await transporter.sendMail(mailOptions);
-  return info;
+  return result;
 }
 
 function calculateDaysUntil(monthDayStr) {
