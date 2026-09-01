@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Circle Chat — Zenitude</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav id="navbar">
+    <div class="container nav-content">
+      <a href="/" class="logo">Zenitude</a>
+      <div class="nav-links">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/intent" class="nav-link">Our Intent</a>
+        <a href="/chat" class="nav-link active">Circle Chat</a>
+        <a href="/#upcoming" class="nav-link">Upcoming</a>
+        <button id="theme-toggle-btn" class="nav-sound-btn" title="Toggle Midnight / Sunset Theme">🌙</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="floating-blobs">
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+      <div class="blob blob-3"></div>
+      <div class="blob blob-4"></div>
+    </div>
+    <div class="hero-content">
+      <h1 class="hero-title">Circle<br><span class="text-gradient">Chat & Wishes</span></h1>
+      <p class="hero-subtitle">A warm, private space to leave thoughts, celebratory shoutouts, and notes for everyone in your circle.</p>
+    </div>
+  </section>
+
+  <main class="container">
+    
+    <div class="chat-container">
+
+      <!-- 3-Day Auto-Clear Policy Banner -->
+      <div class="chat-info-banner">
+        <span class="chat-info-icon">⏳</span>
+        <div>
+          <strong>3-Day Auto-Clear Policy:</strong> Messages are automatically deleted after 72 hours to keep your circle fresh, lightweight, and private.
+        </div>
+      </div>
+
+      <div class="chat-layout">
+        
+        <!-- Chat Compose Form Card -->
+        <div class="chat-form-card">
+          <h2 class="chat-form-title">
+            <span>✍️</span> Leave a Message
+          </h2>
+
+          <form id="chat-form">
+            <!-- Replying indicator banner -->
+            <div id="replying-banner" class="replying-banner hidden">
+              <div class="replying-content">
+                <span class="replying-icon">↩</span>
+                <span class="replying-text">Replying to <strong id="replying-to-name"></strong>: "<span id="replying-to-preview"></span>"</span>
+              </div>
+              <button type="button" id="cancel-reply-btn" class="cancel-reply-btn" title="Cancel Reply">✕</button>
+            </div>
+
+            <div class="chat-form-group">
+              <label for="chat-name" class="chat-form-label">Your Name</label>
+              <div class="chat-input-wrapper">
+                <input 
+                  type="text" 
+                  id="chat-name" 
+                  class="chat-input" 
+                  placeholder="Enter your name (e.g. Maya)" 
+                  maxlength="50" 
+                  required
+                >
+              </div>
+            </div>
+
+            <div class="chat-form-group">
+              <label for="chat-message" class="chat-form-label">Message</label>
+              <textarea 
+                id="chat-message" 
+                class="chat-textarea" 
+                placeholder="Share a warm wish, congratulatory note, or circle update..." 
+                rows="3" 
+                maxlength="1000" 
+                required
+              ></textarea>
+              
+              <!-- Quick Emoji Helpers -->
+              <div class="chat-quick-emojis">
+                <span class="chat-quick-label">Add quick emoji:</span>
+                <button type="button" class="btn-emoji-quick" data-emoji="🎉">🎉</button>
+                <button type="button" class="btn-emoji-quick" data-emoji="🎂">🎂</button>
+                <button type="button" class="btn-emoji-quick" data-emoji="✨">✨</button>
+                <button type="button" class="btn-emoji-quick" data-emoji="💖">💖</button>
+                <button type="button" class="btn-emoji-quick" data-emoji="🥂">🥂</button>
+                <button type="button" class="btn-emoji-quick" data-emoji="🥳">🥳</button>
+                <button type="button" class="btn-emoji-quick" data-emoji="🎈">🎈</button>
+                <button type="button" class="btn-emoji-quick" data-emoji="🌟">🌟</button>
+              </div>
+            </div>
+
+            <button type="submit" id="chat-submit-btn" class="btn-send-message">
+              <span>Send Message</span>
+              <span id="chat-submit-icon">➤</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Chat Feed Section -->
+        <div class="chat-feed-section">
+          <div class="chat-feed-header">
+            <h2 class="chat-feed-title">Recent Circle Messages</h2>
+            <span class="chat-count-badge" id="chat-count-badge">0 Messages</span>
+          </div>
+
+          <!-- Message List -->
+          <div class="chat-messages-list" id="chat-messages-list">
+            <!-- Messages rendered dynamically via JS -->
+          </div>
+
+          <!-- Empty State -->
+          <div class="chat-empty-state hidden" id="chat-empty-state">
+            <span class="chat-empty-icon">💌</span>
+            <h3 class="chat-empty-title">No messages yet</h3>
+            <p class="chat-empty-desc">Be the first to share a warm note with your circle!</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Return to Celebrations Dashboard -->
+      <div class="intent-cta-wrapper">
+        <a href="/" class="btn-return-home">
+          <span>← Return to Celebrations Dashboard</span>
+        </a>
+      </div>
+
+    </div>
+
+  </main>
+
+  <footer>
+    <div class="container footer-content">
+      <p>Made with ❤️ by <strong>Zenitude</strong> — Celebrate Every Milestone</p>
+    </div>
+  </footer>
+
+  <script src="/js/chat.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zenitude — Birthday Celebrations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Full-screen Birthday Celebration Overlay (for Today's Birthday) -->
+  <div id="celebration-overlay" class="celebration-overlay hidden">
+    <canvas id="confetti-canvas"></canvas>
+    <div class="celebration-content">
+      <div class="celebration-emoji-burst" id="emoji-burst"></div>
+      <div class="celebration-card" id="celebration-card">
+        <div class="celebration-close" id="celebration-close" title="Close">&times;</div>
+        
+        <div class="celebration-badge-top">
+          <span>SPECIAL CELEBRATION</span>
+        </div>
+
+        <div class="celebration-photo-wrapper">
+          <div class="celebration-photo" id="celebration-photo"></div>
+          <div class="celebration-crown">👑</div>
+        </div>
+
+        <h1 class="celebration-title">Happy Birthday!</h1>
+        <h2 class="celebration-name" id="celebration-name"></h2>
+        <div class="celebration-zodiac" id="celebration-zodiac"></div>
+        
+        <div class="celebration-wish-card">
+          <p id="celebration-wish-text">"Wishing you a year filled with endless joy, radiant health, and grand adventures!"</p>
+        </div>
+
+        <!-- Interactive Cake Game -->
+        <div class="cake-game-wrapper" id="cake-game">
+          <div class="cake-container" id="interactive-cake" title="Click or tap to blow out the candles!">
+            <div class="cake-candles">
+              <div class="candle"><div class="flame"></div></div>
+              <div class="candle"><div class="flame"></div></div>
+              <div class="candle"><div class="flame"></div></div>
+            </div>
+            <div class="cake-tier tier-top"></div>
+            <div class="cake-tier tier-mid"></div>
+            <div class="cake-tier tier-bottom"></div>
+            <div class="cake-plate"></div>
+          </div>
+          <div class="cake-hint" id="cake-hint">👆 Tap candles to make a wish & blow them out!</div>
+        </div>
+
+        <!-- Interactive Actions inside Celebration -->
+        <div class="celebration-actions">
+          <button type="button" class="btn-celebrate-action" id="burst-confetti-btn">
+            <span>Pop Confetti</span>
+          </button>
+          <button type="button" class="btn-celebrate-action btn-wish-action" id="celebration-wish-btn">
+            <span>Send Wishes</span>
+          </button>
+        </div>
+
+        <div class="celebration-balloons">
+          <span class="balloon" style="--delay: 0s; --x: -40px;">🎈</span>
+          <span class="balloon" style="--delay: 0.3s; --x: -20px;">🎈</span>
+          <span class="balloon" style="--delay: 0.6s; --x: 0px;">🎈</span>
+          <span class="balloon" style="--delay: 0.9s; --x: 20px;">🎈</span>
+          <span class="balloon" style="--delay: 1.2s; --x: 40px;">🎈</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ambient Interactive Background Balloons -->
+  <div id="ambient-balloons-container" class="ambient-balloons-container"></div>
+
+  <!-- Wish Generator Modal -->
+  <div id="wish-modal" class="modal-overlay hidden">
+    <div class="wish-modal-card">
+      <div class="wish-modal-header">
+        <div class="wish-header-title">
+          <span class="modal-emoji">💌</span>
+          <h3>Send a Birthday Wish to <span id="wish-recipient-name" class="highlight-name"></span></h3>
+        </div>
+        <button class="modal-close" id="wish-modal-close">&times;</button>
+      </div>
+
+      <div class="wish-categories">
+        <button class="wish-tab active" data-cat="sweet">Sweet</button>
+        <button class="wish-tab" data-cat="funny">Fun & Casual</button>
+        <button class="wish-tab" data-cat="inspirational">Inspiring</button>
+        <button class="wish-tab" data-cat="short">Short & Sweet</button>
+      </div>
+
+      <div class="wish-box-container">
+        <textarea id="wish-custom-text" rows="4" readonly></textarea>
+        <div class="wish-copy-feedback hidden" id="wish-copy-feedback">Copied to clipboard!</div>
+      </div>
+
+      <div class="wish-modal-actions">
+        <button type="button" class="btn-secondary-action" id="copy-wish-btn">
+          <span>Copy</span>
+        </button>
+        <button type="button" class="btn-secondary-action btn-card-export" id="download-card-btn" title="Download Instagram/Story Graphic Card">
+          <span>📸 Download Card</span>
+        </button>
+        <button type="button" class="btn-primary-action" id="post-chat-wish-btn">
+          <span>💬 Post to Circle Chat</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav id="navbar">
+    <div class="container nav-content">
+      <a href="/" class="logo">Zenitude</a>
+      <div class="nav-links">
+        <a href="/intent">Our Intent</a>
+        <a href="/chat">Circle Chat</a>
+        <a href="/#upcoming">Upcoming</a>
+        <button id="theme-toggle-btn" class="nav-sound-btn" title="Toggle Midnight / Sunset Theme">🌙</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Clean Minimal Hero Section (No celebration icons, no upcoming birthdays text) -->
+  <section class="hero">
+    <div class="floating-blobs">
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+      <div class="blob blob-3"></div>
+      <div class="blob blob-4"></div>
+    </div>
+    <div class="hero-content">
+      <h1 class="hero-title">Celebrate Every<br><span class="text-gradient">Moment</span></h1>
+      <p class="hero-subtitle">Never miss a special day with the people who matter most.</p>
+    </div>
+  </section>
+
+  <main class="container">
+
+    <!-- Today's Birthday Section (Only visible when someone has a birthday today) -->
+    <section id="today-section" class="today-section hidden">
+      <div class="section-header">
+        <h2>Celebrating Today</h2>
+        <p class="section-subtitle">Today is their special day — make it unforgettable</p>
+      </div>
+      <div class="today-cards" id="today-container"></div>
+    </section>
+
+    <!-- Upcoming Birthdays Section (Top 2 Persons) -->
+    <section id="upcoming" class="birthdays-section">
+      <div class="section-header">
+        <h2>Upcoming Birthdays</h2>
+        <p class="section-subtitle">The next upcoming celebrations in your circle</p>
+      </div>
+
+      <!-- Cards Grid (Limited to 2 Persons) -->
+      <div class="cards-grid-two" id="cards-container"></div>
+
+      <!-- Empty state when no birthdays exist -->
+      <div id="upcoming-empty-state" class="empty-upcoming hidden">
+        <h3>No upcoming birthdays found</h3>
+        <p>Add birthdays in the Admin Dashboard to see celebrations here.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="container footer-content">
+      <p>Made with ❤️ by <strong>Zenitude</strong> — Celebrate Every Milestone</p>
+    </div>
+  </footer>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

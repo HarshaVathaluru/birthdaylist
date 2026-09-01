@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zenitude — Executive Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- LOGIN VIEW -->
+  <div id="login-view" class="view">
+    <div class="login-mesh-bg">
+      <div class="login-orb login-orb-1"></div>
+      <div class="login-orb login-orb-2"></div>
+      <div class="login-orb login-orb-3"></div>
+    </div>
+
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-badge">
+          <span class="pulse-dot"></span>
+          <span>ADMINISTRATION PORTAL</span>
+        </div>
+        <h1 class="login-title">Zenitude</h1>
+        <p class="login-subtitle">Sign in to manage celebrations, automation & circle members</p>
+      </div>
+
+      <form id="login-form" autocomplete="off">
+        <div class="login-field-group">
+          <label for="username" class="field-label">Username</label>
+          <div class="field-input-box">
+            <svg class="field-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <input type="text" id="username" name="username" required placeholder="admin" autocomplete="off" value="">
+          </div>
+        </div>
+
+        <div class="login-field-group">
+          <label for="password" class="field-label">Password</label>
+          <div class="field-input-box">
+            <svg class="field-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <input type="password" id="password" name="password" required placeholder="••••••••" autocomplete="new-password" value="">
+            <button type="button" class="btn-toggle-eye" id="toggle-password" title="Toggle password visibility">
+              <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div id="login-error" class="login-error-pill hidden"></div>
+
+        <button type="submit" class="btn-login-submit" id="login-btn">
+          <span class="btn-text">Sign In to Dashboard</span>
+          <span class="arrow-icon">→</span>
+          <span class="spinner hidden">⏳</span>
+        </button>
+      </form>
+
+      <div class="login-footer">
+        <a href="/" class="login-back-link">← Return to Circle Celebrations</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD VIEW -->
+  <div id="dashboard-view" class="view hidden">
+    
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-box">
+          <span class="brand-logo">Zenitude</span>
+          <span class="brand-badge">ADMIN</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-view="birthdays-section">
+          <span class="icon">🎂</span>
+          <span class="nav-label">Birthdays</span>
+          <span class="badge-count" id="badge-birthdays-count">0</span>
+        </button>
+        <button class="nav-item" data-view="circle-section">
+          <span class="icon">👥</span>
+          <span class="nav-label">Auto-Trigger Members</span>
+          <span class="badge-count" id="badge-circle-count">0</span>
+        </button>
+        <button class="nav-item" data-view="messages-section">
+          <span class="icon">💬</span>
+          <span class="nav-label">Circle Chat</span>
+          <span class="badge-count" id="badge-messages-count">0</span>
+        </button>
+        <button class="nav-item" data-view="settings-section">
+          <span class="icon">📧</span>
+          <span class="nav-label">Email & SMTP</span>
+        </button>
+        <div style="height: 1px; background: var(--border-color); margin: 6px 4px;"></div>
+        <a href="/intent" target="_blank" class="nav-item" style="text-decoration: none; color: var(--gray);">
+          <span class="icon">🕊️</span>
+          <span class="nav-label">Our Intent</span>
+          <span style="font-size: 0.72rem; margin-left: auto;">↗</span>
+        </a>
+        <a href="/" target="_blank" class="nav-item" style="text-decoration: none; color: var(--gray);">
+          <span class="icon">🌐</span>
+          <span class="nav-label">Public Feed</span>
+          <span style="font-size: 0.72rem; margin-left: auto;">↗</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="admin-profile-card">
+          <div class="admin-avatar">A</div>
+          <div class="admin-info">
+            <span class="admin-name" id="admin-user-display">Administrator</span>
+            <span class="admin-role">System Manager</span>
+          </div>
+        </div>
+        <div class="sidebar-footer-actions">
+          <button class="btn-sidebar-tool" id="admin-theme-toggle" title="Toggle Dark / Light Theme">
+            <span id="theme-btn-icon">🌙</span> <span class="tool-label">Theme</span>
+          </button>
+          <button class="btn-sidebar-tool btn-logout" id="logout-btn" title="Sign out of Admin">
+            <span>🚪</span> <span class="tool-label">Logout</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <div class="mobile-toggle">
+          <button id="mobile-menu-btn" class="btn-icon">☰</button>
+        </div>
+        <div class="top-bar-title-group">
+          <h2 id="page-title">Birthdays</h2>
+          <span class="top-bar-subtitle" id="page-subtitle">Manage celebrations, notifications, and contacts</span>
+        </div>
+
+        <div class="top-bar-actions" id="top-bar-actions">
+          <div class="search-wrapper" id="search-container">
+            <svg class="search-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="search-input" placeholder="Search by name, date...">
+          </div>
+          
+          <div class="action-buttons-group" id="birthday-action-buttons">
+            <button class="btn-secondary" id="import-btn" title="Bulk Import CSV / JSON">
+              <span class="icon">📥</span> Import
+            </button>
+            <button class="btn-secondary" id="export-csv-btn" title="Export All Birthdays to CSV">
+              <span class="icon">📤</span> Export
+            </button>
+            <button class="btn-primary" id="add-birthday-btn">
+              <span class="icon">➕</span> Add Birthday
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- BIRTHDAYS SECTION -->
+      <section id="birthdays-section" class="content-section">
+        
+        <!-- KPI Stats Cards -->
+        <div class="stats-grid">
+          <div class="stat-card stat-card-1">
+            <div class="stat-icon-wrapper">🎂</div>
+            <div class="stat-details">
+              <h3 class="stat-label">Total Celebrants</h3>
+              <div class="stat-value" id="stat-total">0</div>
+            </div>
+          </div>
+          <div class="stat-card stat-card-2">
+            <div class="stat-icon-wrapper">⏰</div>
+            <div class="stat-details">
+              <h3 class="stat-label">Next 7 Days</h3>
+              <div class="stat-value" id="stat-upcoming">0</div>
+            </div>
+          </div>
+          <div class="stat-card stat-card-3">
+            <div class="stat-icon-wrapper">⚡</div>
+            <div class="stat-details">
+              <h3 class="stat-label">Active Alerts</h3>
+              <div class="stat-value" id="stat-reminders">0</div>
+            </div>
+          </div>
+          <div class="stat-card stat-card-4">
+            <div class="stat-icon-wrapper">👥</div>
+            <div class="stat-details">
+              <h3 class="stat-label">Auto-Trigger Members</h3>
+              <div class="stat-value" id="stat-recipients">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter & Sort Bar -->
+        <div class="filters-bar">
+          <div class="filter-pills">
+            <button class="filter-pill active" data-filter="all">All Celebrants</button>
+            <button class="filter-pill" data-filter="today">Today 🎂</button>
+            <button class="filter-pill" data-filter="week">Next 7 Days</button>
+            <button class="filter-pill" data-filter="month">This Month</button>
+          </div>
+
+          <div class="sort-wrapper">
+            <label for="sort-select">Sort By:</label>
+            <select id="sort-select" class="sort-select">
+              <option value="days_asc">Days Remaining (Soonest First)</option>
+              <option value="name_asc">Name (A → Z)</option>
+              <option value="name_desc">Name (Z → A)</option>
+              <option value="date_asc">Calendar Date (Jan → Dec)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Table Container -->
+        <div class="table-card">
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Profile</th>
+                  <th>Celebrant Name</th>
+                  <th>Celebration Date</th>
+                  <th>Countdown</th>
+                  <th>Reminder Status</th>
+                  <th style="text-align: right;">Quick Actions</th>
+                </tr>
+              </thead>
+              <tbody id="birthdays-table-body">
+                <!-- Populated dynamically by JS -->
+              </tbody>
+            </table>
+            <div id="table-empty-state" class="empty-state hidden">
+              <span class="empty-icon">🎈</span>
+              <p>No birthdays found matching your filter.</p>
+              <button class="btn-primary" id="empty-add-btn" style="margin-top: 12px;">Add First Birthday</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- AUTO-TRIGGER CIRCLE MEMBERS SECTION -->
+      <section id="circle-section" class="content-section hidden">
+        <div class="section-banner">
+          <div class="section-banner-text">
+            <h3>👥 Auto-Trigger Notification Directory</h3>
+            <p>Add your circle members here. Whenever ANY birthday arrives, celebratory emails are automatically dispatched to everyone in this list. No need to add emails per person!</p>
+          </div>
+        </div>
+
+        <div class="settings-grid-layout">
+          
+          <!-- Add Member Form -->
+          <div class="settings-card">
+            <div class="card-header-styled">
+              <h3>➕ Add Circle Member</h3>
+              <p>Enter individual contact or paste multiple members.</p>
+            </div>
+
+            <form id="circle-member-form">
+              <div class="form-grid">
+                <div class="input-group">
+                  <label for="member_name">Member Name</label>
+                  <input type="text" id="member_name" name="name" placeholder="e.g. Maya Patel">
+                </div>
+                <div class="input-group">
+                  <label for="member_email">Email Address *</label>
+                  <input type="email" id="member_email" name="email" placeholder="maya@example.com" required>
+                </div>
+              </div>
+              <button type="submit" class="btn-primary" style="margin-top: 16px;">
+                <span>➕ Add Member</span>
+              </button>
+            </form>
+
+            <div class="quick-paste-box" style="margin-top: 20px;">
+              <label for="member_raw_text" style="font-size: 0.8rem; font-weight: 700; color: var(--dark-soft);">Or Quick-Paste Member Directory:</label>
+              <span class="field-hint" style="margin-bottom: 6px; display: block;">Format: <code>Maya Patel, maya@example.com</code> or <code>email@domain.com</code> (one per line)</span>
+              <textarea id="member_raw_text" rows="3" placeholder="Maya Patel, maya@example.com&#10;Karan Mehta, karan@company.com&#10;Rohan Verma, rohan@domain.com"></textarea>
+              <button type="button" class="btn-secondary" id="save-batch-members-btn" style="margin-top: 10px;">
+                <span>📋 Ingest Member List</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Members Table -->
+          <div class="table-card">
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Member</th>
+                    <th>Email Address</th>
+                    <th style="text-align: right;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="circle-table-body">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+              <div id="circle-empty-state" class="empty-state hidden">
+                <span class="empty-icon">👥</span>
+                <p>No circle members in directory. Add members to auto-trigger celebration emails.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- CIRCLE CHAT MESSAGES MODERATION SECTION -->
+      <section id="messages-section" class="content-section hidden">
+        <div class="section-banner">
+          <div class="section-banner-text">
+            <h3>Circle Chat Moderation</h3>
+            <p>Review, moderate, or remove messages shared in the circle feed. Messages automatically purge after 72 hours.</p>
+          </div>
+          <button class="btn-danger" id="clear-all-messages-btn">
+            <span class="icon">🗑️</span> Clear All Messages
+          </button>
+        </div>
+
+        <div class="table-card">
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Author</th>
+                  <th>Message Body</th>
+                  <th>In Reply To</th>
+                  <th>Sent Timestamp</th>
+                  <th style="text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="messages-table-body">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+            <div id="messages-empty-state" class="empty-state hidden">
+              <span class="empty-icon">💬</span>
+              <p>No active circle messages found.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS SECTION -->
+      <section id="settings-section" class="content-section hidden">
+        <div class="settings-grid-layout">
+          
+          <!-- SMTP Config Card -->
+          <div class="settings-card">
+            <div class="card-header-styled">
+              <h3>📧 SMTP Server Configuration</h3>
+              <p>Configure your outbound email server credentials for automatic daily 07:00 AM dispatch.</p>
+            </div>
+            
+            <form id="settings-form">
+              <div class="form-grid">
+                <div class="input-group">
+                  <label for="smtp_host">SMTP Host</label>
+                  <input type="text" id="smtp_host" name="smtp_host" placeholder="smtp.gmail.com">
+                </div>
+                <div class="input-group">
+                  <label for="smtp_port">SMTP Port</label>
+                  <input type="number" id="smtp_port" name="smtp_port" placeholder="587">
+                </div>
+                <div class="input-group">
+                  <label for="smtp_secure">Secure Connection</label>
+                  <select id="smtp_secure" name="smtp_secure">
+                    <option value="false">STARTTLS (Port 587)</option>
+                    <option value="true">SSL / TLS (Port 465)</option>
+                  </select>
+                </div>
+                <div class="input-group">
+                  <label for="smtp_user">SMTP Username / Email</label>
+                  <input type="text" id="smtp_user" name="smtp_user" placeholder="your-email@gmail.com">
+                </div>
+                <div class="input-group">
+                  <label for="smtp_pass">SMTP App Password</label>
+                  <input type="password" id="smtp_pass" name="smtp_pass" placeholder="••••••••••••••••">
+                </div>
+                <div class="input-group">
+                  <label for="from_email">Sender "From" Email</label>
+                  <input type="email" id="from_email" name="from_email" placeholder="celebrations@zenitude.com">
+                </div>
+                <div class="input-group full-width">
+                  <label for="from_name">Sender "From" Display Name</label>
+                  <input type="text" id="from_name" name="from_name" placeholder="Zenitude Celebrations">
+                </div>
+              </div>
+              <div class="form-actions" style="margin-top: 24px;">
+                <button type="submit" class="btn-primary" id="save-settings-btn">
+                  <span>Save Email Configuration</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- SMTP Testing & Diagnostics Card -->
+          <div class="settings-card">
+            <div class="card-header-styled">
+              <h3>⚡ Live SMTP Diagnostics</h3>
+              <p>Verify that your mail server credentials and template rendering work properly.</p>
+            </div>
+
+            <div class="diagnostic-box">
+              <div class="input-group">
+                <label for="test-email-target">Recipient Test Address</label>
+                <input type="email" id="test-email-target" placeholder="enter-your-email@example.com">
+              </div>
+              <div class="diagnostic-actions" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <button type="button" class="btn-primary" id="send-test-email-btn">
+                  <span>📨 Dispatch Test Email</span>
+                </button>
+                <a href="/api/settings/preview-email?type=celebrant" target="_blank" rel="noopener" class="btn-secondary" style="text-decoration: none; text-align: center;">
+                  <span>👑 Preview Celebrant VIP Wish</span>
+                </a>
+                <a href="/api/settings/preview-email?type=intimation" target="_blank" rel="noopener" class="btn-secondary" style="text-decoration: none; text-align: center;">
+                  <span>📢 Preview Circle Intimation</span>
+                </a>
+                <a href="/api/settings/preview-email?type=upcoming" target="_blank" rel="noopener" class="btn-secondary" style="text-decoration: none; text-align: center;">
+                  <span>⏰ Preview 2-Day Heads-Up</span>
+                </a>
+              </div>
+            </div>
+
+            <div class="info-alert-box" style="margin-top: 20px;">
+              <span class="info-alert-icon">💡</span>
+              <div>
+                <strong>Automated 07:00 AM Cron Schedule:</strong>
+                <p>Zenitude scans birthdays daily at <strong>07:00 AM</strong>. On celebration day, the birthday celebrant receives the <strong>VIP Celebrant Wish</strong>, while circle members receive the <strong>Celebration Announcement & Chat prompt</strong> (or 2-day advance notice).</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ADD / EDIT BIRTHDAY MODAL (Clean & Simple — No Per-User Email Clutter) -->
+  <div id="birthday-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-title">Add Birthday</h3>
+        <button class="modal-close" id="modal-close">&times;</button>
+      </div>
+
+      <form id="birthday-form">
+        <input type="hidden" id="birthday-id" name="id">
+
+        <div class="form-grid">
+          
+          <div class="input-group full-width photo-upload-group">
+            <label>Celebrant Photo (Optional)</label>
+            <div class="photo-uploader">
+              <div class="photo-preview" id="photo-preview">
+                <span>📷</span>
+              </div>
+              <div class="photo-controls">
+                <input type="file" id="photo-input" name="photo" accept="image/*" class="hidden">
+                <button type="button" class="btn-secondary" id="choose-photo-btn">Choose Image</button>
+                <button type="button" class="btn-text-danger hidden" id="remove-photo-btn">Remove</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="input-group full-width">
+            <label for="name">Celebrant Full Name *</label>
+            <input type="text" id="name" name="name" required placeholder="e.g. Aarav Sharma">
+          </div>
+
+          <div class="input-group">
+            <label for="date">Birthday Date (MM-DD) *</label>
+            <input type="text" id="date" name="date" required placeholder="09-15" pattern="(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])" title="Format: MM-DD (e.g. 09-15 for Sept 15)">
+          </div>
+
+          <div class="input-group">
+            <label for="remind_days_before">Advance Alert (Days)</label>
+            <input type="number" id="remind_days_before" name="remind_days_before" min="1" max="30" value="2">
+          </div>
+
+          <div class="input-group full-width">
+            <label for="notes">Celebration Notes / Hobbies (Optional)</label>
+            <textarea id="notes" name="notes" rows="2" placeholder="Favorite sweets, favorite books, memories..."></textarea>
+          </div>
+
+          <div class="input-group full-width">
+            <label>Reminder Status</label>
+            <label class="switch-label">
+              <input type="checkbox" id="is_active" name="is_active" checked>
+              <span class="switch-text">Enable automatic email reminders for this birthday</span>
+            </label>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="modal-cancel-btn">Cancel</button>
+          <button type="submit" class="btn-primary" id="save-birthday-btn">Save Celebrant</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- BULK IMPORT CSV / JSON MODAL -->
+  <div id="import-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Bulk Import Birthdays</h3>
+        <button class="modal-close" id="import-modal-close">&times;</button>
+      </div>
+
+      <div class="import-modal-body">
+        <p class="import-help">Paste comma-separated CSV rows or choose a <code>.csv</code> file. Format: <code>Name, Date(MM-DD), Notes</code></p>
+        
+        <div class="file-dropzone" id="file-dropzone">
+          <input type="file" id="csv-file-input" accept=".csv, .json" class="hidden">
+          <span class="dropzone-icon">📄</span>
+          <p><strong>Click to choose file</strong> or drag & drop .csv file here</p>
+        </div>
+
+        <div class="input-group full-width" style="margin-top: 14px;">
+          <label for="import-text">Or Paste CSV Data Directly:</label>
+          <textarea id="import-text" rows="5" placeholder="Maya Patel, 09-24, Loves art&#10;Karan Mehta, 11-05, Photographer"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="import-cancel-btn">Cancel</button>
+        <button type="button" class="btn-primary" id="execute-import-btn">Execute Import</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/js/admin.js"></script>
+</body>
+</html>

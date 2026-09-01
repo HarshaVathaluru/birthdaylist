@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Our Intent — Zenitude</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav id="navbar">
+    <div class="container nav-content">
+      <a href="/" class="logo">Zenitude</a>
+      <div class="nav-links">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/intent" class="nav-link active">Our Intent</a>
+        <a href="/chat" class="nav-link">Circle Chat</a>
+        <a href="/#upcoming" class="nav-link">Upcoming</a>
+        <button id="theme-toggle-btn" class="nav-sound-btn" title="Toggle Midnight / Sunset Theme">🌙</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero" style="padding-top: 140px; padding-bottom: 50px;">
+    <div class="floating-blobs">
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+      <div class="blob blob-3"></div>
+      <div class="blob blob-4"></div>
+    </div>
+    <div class="hero-content">
+      <h1 class="hero-title">Designed for<br><span class="text-gradient">Meaningful Connections</span></h1>
+      <p class="hero-subtitle">Zenitude exists to bring intention, warmth, and peace of mind back to celebrating life's most precious milestones.</p>
+    </div>
+  </section>
+
+  <main class="container">
+
+    <section class="intent-section">
+      
+      <!-- Philosophy / Mission Statement Box -->
+      <div class="intent-quote-box">
+        <p class="intent-quote-text">"In a busy world, remembering someone's special day isn't just about dates on a calendar — it's about honoring the bond you share and making them feel truly seen."</p>
+        <span class="intent-quote-author">The Zenitude Philosophy</span>
+      </div>
+
+      <!-- Core Values Grid -->
+      <div class="values-grid">
+        
+        <div class="value-card">
+          <div class="value-icon-box">⏰</div>
+          <span class="value-tag">Intentionality</span>
+          <h3 class="value-title">Thoughtful Reminders</h3>
+          <p class="value-description">Early morning 07:00 AM notifications and 2-day advance alerts ensure every celebration is remembered before the day gets busy.</p>
+          <div class="value-highlight">Never forget a moment that matters.</div>
+        </div>
+
+        <div class="value-card">
+          <div class="value-icon-box">💬</div>
+          <span class="value-tag">Community</span>
+          <h3 class="value-title">Circle Connection</h3>
+          <p class="value-description">A private, shared feed to exchange genuine wishes, shared memories, and celebrate peer milestones together seamlessly.</p>
+          <div class="value-highlight">Shared warmth in a private space.</div>
+        </div>
+
+        <div class="value-card">
+          <div class="value-icon-box">🕊️</div>
+          <span class="value-tag">Simplicity</span>
+          <h3 class="value-title">Peace of Mind</h3>
+          <p class="value-description">Frictionless birthday tracking without intrusive ads, complex setups, or unnecessary data clutter.</p>
+          <div class="value-highlight">Pure, elegant celebration tracking.</div>
+        </div>
+
+      </div>
+
+      <!-- Bottom Return Button -->
+      <div class="intent-cta-wrapper">
+        <a href="/" class="btn-primary-action" style="text-decoration: none; padding: 14px 32px; font-size: 1rem;">
+          <span>← Return to Celebrations Dashboard</span>
+        </a>
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="container footer-content">
+      <p>Made with ❤️ by <strong>Zenitude</strong> — Celebrate Every Milestone</p>
+    </div>
+  </footer>
+
+  <script>
+    // Theme toggle
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    const savedTheme = localStorage.getItem('zenitude_theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    if (themeToggleBtn) {
+      themeToggleBtn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+      themeToggleBtn.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme') || 'light';
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('zenitude_theme', next);
+        themeToggleBtn.textContent = next === 'dark' ? '☀️' : '🌙';
+      });
+    }
+
+    // Navbar scroll effect
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 20) {
+        navbar.classList.add('scrolled');
+      } else {
+        navbar.classList.remove('scrolled');
+      }
+    });
+  </script>
+</body>
+</html>
