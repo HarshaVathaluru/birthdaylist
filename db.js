@@ -1,4 +1,5 @@
 const Database = require('better-sqlite3');
+const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
 
@@ -65,5 +66,58 @@ db.exec(`
 try { db.exec("ALTER TABLE messages ADD COLUMN reply_to_id INTEGER;"); } catch (e) {}
 try { db.exec("ALTER TABLE messages ADD COLUMN reply_to_name TEXT;"); } catch (e) {}
 try { db.exec("ALTER TABLE messages ADD COLUMN reply_to_text TEXT;"); } catch (e) {}
+
+// Automatic admin provisioning (Ensures online deployments like Render have working admin credentials)
+function initAdminAccount() {
+  try {
+    const defaultUsername = process.env.ADMIN_USERNAME || 'admin';
+    const defaultPassword = process.env.ADMIN_PASSWORD || 'admin123';
+    const existing = db.prepare('SELECT * FROM admin WHERE username = ?').get(defaultUsername);
+
+    if (!existing) {
+      const passwordHash = bcrypt.hashSync(defaultPassword, 10);
+      db.prepare('INSERT INTO admin (username, password_hash) VALUES (?, ?)').run(defaultUsername, passwordHash);
+      console.log(`[Database] Initialized default admin credentials: ${defaultUsername}`);
+    } else if (process.env.ADMIN_PASSWORD) {
+      // Sync password if explicitly set in environment variables on cloud host
+      const passwordHash = bcrypt.hashSync(process.env.ADMIN_PASSWORD, 10);
+      db.prepare('UPDATE admin SET password_hash = ? WHERE username = ?').run(passwordHash, defaultUsername);
+    }
+  } catch (err) {
+    console.error('[Database] Error provisioning admin credentials:', err.message);
+  }
+}
+
+// Initial sample data seeding for fresh instances
+function initSampleData() {
+  try {
+    const birthdayCount = db.prepare('SELECT COUNT(*) as count FROM birthdays').get().count;
+    if (birthdayCount === 0) {
+      const now = new Date();
+      const formatMMDD = (date) => `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      
+      const in3Days = new Date(now);
+      in3Days.setDate(now.getDate() + 3);
+      
+      const in7Days = new Date(now);
+      in7Days.setDate(now.getDate() + 7);
+      
+      const in25Days = new Date(now);
+      in25Days.setDate(now.getDate() + 25);
+      
+      const insertBirthday = db.prepare('INSERT INTO birthdays (name, date, notes) VALUES (?, ?, ?)');
+      insertBirthday.run('Aarav Sharma', formatMMDD(now), 'Loves chocolate cake & photography 🎉');
+      insertBirthday.run('Priya Patel', formatMMDD(in3Days), 'Gift idea: Books or coffee shop gift card');
+      insertBirthday.run('Rahul Verma', formatMMDD(in7Days), 'Planning a surprise rooftop dinner');
+      insertBirthday.run('Ananya Singh', formatMMDD(in25Days), "Don't forget flowers");
+      console.log('[Database] Seeded initial sample birthdays.');
+    }
+  } catch (err) {
+    console.error('[Database] Error seeding sample birthdays:', err.message);
+  }
+}
+
+initAdminAccount();
+initSampleData();
 
 module.exports = db;
