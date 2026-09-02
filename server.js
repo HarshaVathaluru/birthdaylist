@@ -13,9 +13,9 @@ const settingsRoutes = require('./routes/settings');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Middleware (Allows saving high-resolution memory photos & avatars)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Static directories
 app.use(express.static(path.join(__dirname, 'public')));
@@ -24,14 +24,23 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 const { router: messagesRoutes, purgeOldMessages } = require('./routes/messages');
 
 const circleMembersRoutes = require('./routes/circleMembers');
+const memoriesRoutes = require('./routes/memories');
 
 // HTML Routes
 app.get(['/intent', '/our-intent', '/intent.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'intent.html'));
 });
 
+app.get(['/founder', '/founder.html', '/motive', '/our-motive', '/motive.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'founder.html'));
+});
+
 app.get(['/chat', '/circle-chat', '/chat.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'chat.html'));
+});
+
+app.get(['/memories', '/memories.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'memories.html'));
 });
 
 app.get(['/admin', '/admin.html'], (req, res) => {
@@ -45,6 +54,7 @@ app.use('/api/recipients', recipientsRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/messages', messagesRoutes);
 app.use('/api/circle-members', circleMembersRoutes);
+app.use('/api/memories', memoriesRoutes);
 
 // Start Cron Job & 3-Day Message Auto-Clear Policy
 emailService.startCronJob();

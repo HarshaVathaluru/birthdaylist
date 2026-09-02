@@ -47,9 +47,28 @@ function createTransport() {
   });
 }
 
+function normalizeDateStr(dateStr) {
+  if (!dateStr) return '01-01';
+  const parts = String(dateStr).trim().split('-').map(Number);
+  let m, d;
+  if (parts.length === 3) {
+    m = parts[1];
+    d = parts[2];
+  } else if (parts.length === 2) {
+    m = parts[0];
+    d = parts[1];
+  } else {
+    return '01-01';
+  }
+  const mm = String(m).padStart(2, '0');
+  const dd = String(d).padStart(2, '0');
+  return `${mm}-${dd}`;
+}
+
 function formatDateLong(monthDayStr) {
-  if (!monthDayStr || !monthDayStr.includes('-')) return monthDayStr;
-  const [m, d] = monthDayStr.split('-');
+  if (!monthDayStr) return '';
+  const norm = normalizeDateStr(monthDayStr);
+  const [m, d] = norm.split('-');
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
@@ -648,13 +667,16 @@ async function sendTestEmail(targetEmail) {
   return result;
 }
 
-function calculateDaysUntil(monthDayStr) {
+function calculateDaysUntil(dateStr) {
+  if (!dateStr) return 999;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
-  const [month, day] = monthDayStr.split('-').map(Number);
+  const norm = normalizeDateStr(dateStr);
+  const [month, day] = norm.split('-').map(Number);
   
   let nextBday = new Date(today.getFullYear(), month - 1, day);
+  nextBday.setHours(0, 0, 0, 0);
   
   if (nextBday < today) {
     nextBday.setFullYear(today.getFullYear() + 1);

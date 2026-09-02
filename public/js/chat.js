@@ -1,14 +1,41 @@
 document.addEventListener('DOMContentLoaded', () => {
   const chatForm = document.getElementById('chat-form');
-  const chatNameInput = document.getElementById('chat-name');
-  const chatMessageInput = document.getElementById('chat-message');
-  const chatSubmitBtn = document.getElementById('chat-submit-btn');
+  const chatNameInput = document.getElementById('sender_name') || document.getElementById('chat-name');
+  const chatMessageInput = document.getElementById('message_text') || document.getElementById('chat-message');
+  const chatSubmitBtn = document.getElementById('submit-message-btn') || document.getElementById('chat-submit-btn');
   const chatMessagesList = document.getElementById('chat-messages-list');
   const chatCountBadge = document.getElementById('chat-count-badge');
   const chatEmptyState = document.getElementById('chat-empty-state');
   const navbar = document.getElementById('navbar');
-  const emojiButtons = document.querySelectorAll('.btn-emoji-quick');
+  const emojiButtons = document.querySelectorAll('.emoji-chip, .btn-emoji-quick');
+  const moodButtons = document.querySelectorAll('.note-mood-btn');
+  const charCount = document.getElementById('char-count');
   const themeToggleBtn = document.getElementById('theme-toggle-btn');
+
+  // Character Counter
+  function updateCharCount() {
+    if (charCount && chatMessageInput) {
+      charCount.textContent = chatMessageInput.value.length;
+    }
+  }
+
+  if (chatMessageInput) {
+    chatMessageInput.addEventListener('input', updateCharCount);
+  }
+
+  // Mood Starter Selectors
+  moodButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      moodButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const prefix = btn.getAttribute('data-prefix');
+      if (chatMessageInput && prefix) {
+        chatMessageInput.value = prefix;
+        chatMessageInput.focus();
+        updateCharCount();
+      }
+    });
+  });
 
   // Theme Management
   const savedTheme = localStorage.getItem('zenitude_theme') || 'light';
@@ -61,11 +88,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const msgParam = urlParams.get('message');
   const recipientParam = urlParams.get('recipient');
 
-  if (msgParam) {
+  if (msgParam && chatMessageInput) {
     chatMessageInput.value = msgParam;
+    updateCharCount();
     chatForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
     chatMessageInput.focus();
-    showUserToast(`Drafted birthday wish for ${recipientParam || 'celebrant'} loaded!`, 'info');
   }
 
   // Navbar scroll effect
@@ -81,8 +108,11 @@ document.addEventListener('DOMContentLoaded', () => {
   emojiButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       const emoji = btn.dataset.emoji;
-      chatMessageInput.value += emoji;
-      chatMessageInput.focus();
+      if (chatMessageInput && emoji) {
+        chatMessageInput.value += emoji;
+        updateCharCount();
+        chatMessageInput.focus();
+      }
     });
   });
 

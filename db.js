@@ -60,6 +60,18 @@ db.exec(`
     reply_to_text TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
+
+  CREATE TABLE IF NOT EXISTS memories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    category TEXT DEFAULT 'celebrations',
+    caption TEXT,
+    author_name TEXT,
+    date_str TEXT,
+    photo_data TEXT,
+    badge_tag TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 `);
 
 // Migrations for reply support

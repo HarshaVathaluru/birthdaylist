@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let birthdays = [];
   let circleMessages = [];
   let circleMembers = [];
+  let memoriesList = [];
   let currentFilter = 'all';
   let currentSort = 'days_asc';
   let searchTerm = '';
@@ -36,6 +37,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const badgeBirthdaysCount = document.getElementById('badge-birthdays-count');
   const badgeMessagesCount = document.getElementById('badge-messages-count');
   const badgeCircleCount = document.getElementById('badge-circle-count');
+  const badgeMemoriesCount = document.getElementById('badge-memories-count');
+  const totalMemoriesCount = document.getElementById('total-memories-count');
+  const memoriesTableBody = document.getElementById('memories-table-body');
+  const memoriesEmptyState = document.getElementById('memories-empty-state');
   const statTotal = document.getElementById('stat-total');
   const statUpcoming = document.getElementById('stat-upcoming');
   const statReminders = document.getElementById('stat-reminders');
@@ -255,6 +260,12 @@ document.addEventListener('DOMContentLoaded', () => {
         searchContainer.classList.add('hidden');
         birthdayActionButtons.classList.add('hidden');
         fetchCircleMessages();
+      } else if (targetView === 'memories-section') {
+        pageTitle.textContent = 'Workspace Memories';
+        pageSubtitle.textContent = 'Review, preview, and moderate team milestone photos and stories';
+        searchContainer.classList.add('hidden');
+        birthdayActionButtons.classList.add('hidden');
+        fetchMemoriesList();
       } else if (targetView === 'settings-section') {
         pageTitle.textContent = 'Email & SMTP';
         pageSubtitle.textContent = 'Outbound mail server configuration and diagnostics';
@@ -283,6 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchBirthdays();
     fetchCircleMembers();
     fetchCircleMessages();
+    fetchMemoriesList();
   }
 
   // ===== BIRTHDAYS DATA & CRUD =====
@@ -494,7 +506,14 @@ document.addEventListener('DOMContentLoaded', () => {
       modalTitle.textContent = 'Edit Celebrant';
       birthdayIdInput.value = bday.id;
       document.getElementById('name').value = bday.name;
-      document.getElementById('date').value = bday.date;
+      
+      const currentYear = new Date().getFullYear();
+      if (bday.date && bday.date.length === 5) {
+        document.getElementById('date').value = `${currentYear}-${bday.date}`;
+      } else {
+        document.getElementById('date').value = bday.date || '';
+      }
+      
       document.getElementById('remind_days_before').value = bday.remind_days_before || 2;
       document.getElementById('notes').value = bday.notes || '';
       document.getElementById('is_active').checked = bday.reminder_enabled === 1 || bday.reminder_enabled === true;
@@ -506,6 +525,11 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       modalTitle.textContent = 'Add Celebrant';
       birthdayIdInput.value = '';
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      document.getElementById('date').value = `${yyyy}-${mm}-${dd}`;
       document.getElementById('remind_days_before').value = 2;
       document.getElementById('is_active').checked = true;
     }
@@ -542,15 +566,40 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function normalizeDateInput(str) {
+    if (!str) return '';
+    const parts = str.trim().split(/[-/.]/).map(Number);
+    if (parts.length === 3) {
+      let m = parts[1];
+      let d = parts[2];
+      if (parts[0] > 1000) {
+        m = parts[1];
+        d = parts[2];
+      } else if (parts[2] > 1000) {
+        d = parts[0];
+        m = parts[1];
+      }
+      return `${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    } else if (parts.length === 2) {
+      let m = parts[0];
+      let d = parts[1];
+      return `${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    }
+    return str.trim();
+  }
+
   // Birthday Form Submit
   birthdayForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = birthdayIdInput.value;
     const isEdit = !!id;
 
+    const rawDate = document.getElementById('date').value.trim();
+    const normalizedDate = normalizeDateInput(rawDate);
+
     const formData = new FormData();
     formData.append('name', document.getElementById('name').value.trim());
-    formData.append('date', document.getElementById('date').value.trim());
+    formData.append('date', normalizedDate);
     formData.append('remind_days_before', document.getElementById('remind_days_before').value);
     formData.append('notes', document.getElementById('notes').value.trim());
     formData.append('reminder_enabled', document.getElementById('is_active').checked ? '1' : '0');
@@ -882,6 +931,105 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } catch (e) {
         showToast('Error clearing messages.', 'error');
+      }
+    });
+  }
+
+  // ===== WORKSPACE MEMORIES MODERATION =====
+  async function fetchMemoriesList() {
+    try {
+      const res = await fetch('/api/memories');
+      if (res.ok) {
+        memoriesList = await res.json();
+        if (badgeMemoriesCount) badgeMemoriesCount.textContent = memoriesList.length;
+        if (totalMemoriesCount) totalMemoriesCount.textContent = `${memoriesList.length} Total`;
+        renderMemoriesTable();
+      }
+    } catch (err) {
+      console.warn('Could not fetch memories', err);
+    }
+  }
+
+  function renderMemoriesTable() {
+    if (!memoriesTableBody) return;
+    memoriesTableBody.innerHTML = '';
+
+    if (memoriesList.length === 0) {
+      if (memoriesEmptyState) memoriesEmptyState.classList.remove('hidden');
+      return;
+    }
+
+    if (memoriesEmptyState) memoriesEmptyState.classList.add('hidden');
+
+    memoriesList.forEach(m => {
+      const tr = document.createElement('tr');
+      const photoHtml = m.photo_data 
+        ? `<img src="${m.photo_data}" alt="Memory" style="width: 46px; height: 46px; border-radius: 10px; object-fit: cover; border: 1px solid var(--border-color);">` 
+        : `<div style="width: 46px; height: 46px; border-radius: 10px; background: rgba(234, 88, 12, 0.1); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">📸</div>`;
+
+      tr.innerHTML = `
+        <td>${photoHtml}</td>
+        <td>
+          <strong>${escapeHtml(m.title)}</strong>
+          <div style="font-size: 0.75rem; color: var(--primary); font-weight: 700; margin-top: 2px;">${escapeHtml(m.badge_tag || 'TEAM HIGHLIGHT')}</div>
+        </td>
+        <td><span class="badge-category" style="padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; background: rgba(78, 205, 196, 0.15); color: #0D9488;">${escapeHtml(m.category || 'celebrations')}</span></td>
+        <td>${escapeHtml(m.author_name || 'Circle Member')}</td>
+        <td><span style="font-size: 0.8rem; color: var(--gray);">${escapeHtml(m.date_str || 'Today')}</span></td>
+        <td><div style="max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.85rem; color: var(--text-muted);">${escapeHtml(m.caption || '')}</div></td>
+        <td style="text-align: right;">
+          <button type="button" class="btn-action-icon btn-delete" title="Delete Memory" data-id="${m.id}">
+            🗑️
+          </button>
+        </td>
+      `;
+
+      tr.querySelector('.btn-delete').addEventListener('click', async () => {
+        if (!confirm(`Are you sure you want to delete memory "${m.title}"?`)) return;
+        try {
+          const r = await fetch(`/api/memories/${m.id}`, { method: 'DELETE' });
+          if (r.ok) {
+            showToast('Memory deleted successfully.', 'success');
+            fetchMemoriesList();
+          } else {
+            showToast('Failed to delete memory.', 'error');
+          }
+        } catch (e) {
+          showToast('Network error deleting memory.', 'error');
+        }
+      });
+
+      memoriesTableBody.appendChild(tr);
+    });
+  }
+
+  // Purge Old Memories Button Handler
+  const purgeMemoriesSelect = document.getElementById('purge-memories-select');
+  const executePurgeMemoriesBtn = document.getElementById('execute-purge-memories-btn');
+
+  if (executePurgeMemoriesBtn && purgeMemoriesSelect) {
+    executePurgeMemoriesBtn.addEventListener('click', async () => {
+      const selectedVal = purgeMemoriesSelect.value;
+      const isAll = selectedVal === 'all';
+      const promptMsg = isAll 
+        ? 'Are you sure you want to permanently delete ALL memories from the workspace? This cannot be undone.' 
+        : `Are you sure you want to permanently delete all memories older than ${selectedVal} days?`;
+
+      if (!confirm(promptMsg)) return;
+
+      try {
+        const endpoint = isAll ? '/api/memories/purge/all' : `/api/memories/purge/older-than?days=${selectedVal}`;
+        const res = await fetch(endpoint, { method: 'DELETE' });
+        const data = await res.json();
+
+        if (res.ok) {
+          showToast(data.message || 'Old memories purged successfully.', 'success');
+          fetchMemoriesList();
+        } else {
+          showToast(data.error || 'Failed to purge memories.', 'error');
+        }
+      } catch (err) {
+        showToast('Network error purging memories.', 'error');
       }
     });
   }

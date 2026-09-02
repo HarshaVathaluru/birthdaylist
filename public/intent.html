@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Our Intent — Zenitude</title>
+  <title>Our Intent — Zenitude Workspace</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -14,12 +14,23 @@
   <!-- Navigation -->
   <nav id="navbar">
     <div class="container nav-content">
-      <a href="/" class="logo">Zenitude</a>
-      <div class="nav-links">
+      <a href="/" class="logo">
+        <span>Zenitude</span>
+        <span class="brand-badge">Workspace</span>
+      </a>
+      <!-- Mobile Nav Toggle Hamburger Button -->
+      <button id="mobile-nav-toggle" class="mobile-nav-btn" aria-label="Toggle Navigation Menu">
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+      </button>
+
+      <div class="nav-links" id="nav-links">
         <a href="/" class="nav-link">Home</a>
         <a href="/intent" class="nav-link active">Our Intent</a>
+        <a href="/founder" class="nav-link">Founder</a>
         <a href="/chat" class="nav-link">Circle Chat</a>
-        <a href="/#upcoming" class="nav-link">Upcoming</a>
+        <a href="/memories" class="nav-link">Memories</a>
         <button id="theme-toggle-btn" class="nav-sound-btn" title="Toggle Midnight / Sunset Theme">🌙</button>
       </div>
     </div>
@@ -34,8 +45,9 @@
       <div class="blob blob-4"></div>
     </div>
     <div class="hero-content">
+      <div class="pill-badge-3d"><span>🕊️ THE ZENITUDE PHILOSOPHY</span></div>
       <h1 class="hero-title">Designed for<br><span class="text-gradient">Meaningful Connections</span></h1>
-      <p class="hero-subtitle">Zenitude exists to bring intention, warmth, and peace of mind back to celebrating life's most precious milestones.</p>
+      <p class="hero-subtitle">Zenitude Workspace exists to bring intention, warmth, and peace of mind back to celebrating team milestones.</p>
     </div>
   </section>
 
@@ -62,10 +74,12 @@
 
   <footer>
     <div class="container footer-content">
-      <p>Made with ❤️ by <strong>Zenitude</strong> — Celebrate Every Milestone</p>
+      <p>Made with ❤️ by <strong>Zenitude Workspace</strong> — Celebrate Every Milestone</p>
     </div>
   </footer>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="/js/workspace-3d.js"></script>
   <script>
     // Theme toggle
     const themeToggleBtn = document.getElementById('theme-toggle-btn');
@@ -74,23 +88,13 @@
     if (themeToggleBtn) {
       themeToggleBtn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
       themeToggleBtn.addEventListener('click', () => {
-        const current = document.documentElement.getAttribute('data-theme') || 'light';
+        const current = document.documentElement.getAttribute('data-theme');
         const next = current === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', next);
         localStorage.setItem('zenitude_theme', next);
         themeToggleBtn.textContent = next === 'dark' ? '☀️' : '🌙';
       });
     }
-
-    // Navbar scroll effect
-    const navbar = document.getElementById('navbar');
-    window.addEventListener('scroll', () => {
-      if (window.scrollY > 20) {
-        navbar.classList.add('scrolled');
-      } else {
-        navbar.classList.remove('scrolled');
-      }
-    });
   </script>
 </body>
 </html>

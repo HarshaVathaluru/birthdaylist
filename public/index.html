@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Zenitude — Birthday Celebrations</title>
+  <title>Zenitude Workspace — Team Celebrations & Milestones</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -113,20 +113,32 @@
     </div>
   </div>
 
-  <!-- Navigation -->
+  <!-- Navigation with Dedicated Memories Page Link -->
   <nav id="navbar">
     <div class="container nav-content">
-      <a href="/" class="logo">Zenitude</a>
-      <div class="nav-links">
-        <a href="/intent">Our Intent</a>
-        <a href="/chat">Circle Chat</a>
-        <a href="/#upcoming">Upcoming</a>
+      <a href="/" class="logo">
+        <span>Zenitude</span>
+        <span class="brand-badge">Workspace</span>
+      </a>
+      <!-- Mobile Nav Toggle Hamburger Button -->
+      <button id="mobile-nav-toggle" class="mobile-nav-btn" aria-label="Toggle Navigation Menu">
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+      </button>
+
+      <div class="nav-links" id="nav-links">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/intent" class="nav-link">Our Intent</a>
+        <a href="/founder" class="nav-link">Founder</a>
+        <a href="/chat" class="nav-link">Circle Chat</a>
+        <a href="/memories" class="nav-link">Memories</a>
         <button id="theme-toggle-btn" class="nav-sound-btn" title="Toggle Midnight / Sunset Theme">🌙</button>
       </div>
     </div>
   </nav>
 
-  <!-- Clean Minimal Hero Section (No celebration icons, no upcoming birthdays text) -->
+  <!-- Hero Section with 3D Ambient WebGL Experience -->
   <section class="hero">
     <div class="floating-blobs">
       <div class="blob blob-1"></div>
@@ -135,8 +147,23 @@
       <div class="blob blob-4"></div>
     </div>
     <div class="hero-content">
-      <h1 class="hero-title">Celebrate Every<br><span class="text-gradient">Moment</span></h1>
-      <p class="hero-subtitle">Never miss a special day with the people who matter most.</p>
+      <div class="pill-badge-3d"><span>✨ INTENTIONAL MILESTONES</span></div>
+      <h1 class="hero-title">Zenitude Workspace<br><span class="text-gradient">Celebrations & Milestones</span></h1>
+      <p class="hero-subtitle">Intelligent milestone automation, tailored executive wishes, and seamless circle connections for your team.</p>
+
+      <!-- Floating 3D Stat Pills -->
+      <div class="hero-stats-row">
+        <div class="hero-stat-pill">
+          <span class="stat-pulse-dot"></span>
+          <span>07:00 AM Resend Engine Active</span>
+        </div>
+        <div class="hero-stat-pill">
+          <span>👑 VIP Celebrant Wishes</span>
+        </div>
+        <div class="hero-stat-pill">
+          <span>🕊️ 72h Privacy-First Feed</span>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -154,8 +181,8 @@
     <!-- Upcoming Birthdays Section (Top 2 Persons) -->
     <section id="upcoming" class="birthdays-section">
       <div class="section-header">
-        <h2>Upcoming Birthdays</h2>
-        <p class="section-subtitle">The next upcoming celebrations in your circle</p>
+        <h2>Upcoming Celebrations</h2>
+        <p class="section-subtitle">The next upcoming milestones in your team circle</p>
       </div>
 
       <!-- Cards Grid (Limited to 2 Persons) -->
@@ -163,8 +190,49 @@
 
       <!-- Empty state when no birthdays exist -->
       <div id="upcoming-empty-state" class="empty-upcoming hidden">
-        <h3>No upcoming birthdays found</h3>
-        <p>Add birthdays in the Admin Dashboard to see celebrations here.</p>
+        <h3>No upcoming celebrations found</h3>
+        <p>Add celebrations in the Admin Dashboard to see milestones here.</p>
+      </div>
+    </section>
+
+    <!-- Interactive Live Milestone Radar & Automation Showcase -->
+    <section id="workflow-section" class="workflow-section">
+      <div class="section-header">
+        <div class="pill-badge-3d"><span>✨ WORKSPACE INTELLIGENCE</span></div>
+        <h2>Automated Milestone Pipeline</h2>
+        <p class="section-subtitle">Real-time live automation scanning milestones daily at 07:00 AM with zero manual overhead</p>
+      </div>
+
+      <div class="workflow-radar-centered-wrapper">
+        <!-- 3D Holographic Prism Live Status Card -->
+        <div class="bento-card bento-radar-card">
+          <div class="bento-radar-header">
+            <div class="radar-live-badge">
+              <span class="stat-pulse-dot"></span>
+              <span>LIVE AUTOMATION ENGINE</span>
+            </div>
+            <span class="radar-scan-time">07:00 AM DAILY SCAN</span>
+          </div>
+
+          <div id="radar-3d-canvas-container" class="bento-3d-canvas"></div>
+
+          <div class="bento-radar-stats">
+            <div class="radar-stat-item">
+              <span class="stat-num">100%</span>
+              <span class="stat-label">Automated Delivery</span>
+            </div>
+            <div class="radar-stat-divider"></div>
+            <div class="radar-stat-item">
+              <span class="stat-num">0</span>
+              <span class="stat-label">Manual Overhead</span>
+            </div>
+            <div class="radar-stat-divider"></div>
+            <div class="radar-stat-item">
+              <span class="stat-num">72h</span>
+              <span class="stat-label">Privacy Purge</span>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -172,10 +240,13 @@
 
   <footer>
     <div class="container footer-content">
-      <p>Made with ❤️ by <strong>Zenitude</strong> — Celebrate Every Milestone</p>
+      <p>Made with ❤️ by <strong>Zenitude Workspace</strong> — Celebrate Every Milestone</p>
     </div>
   </footer>
 
+  <!-- Three.js 3D Library & Workspace Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="/js/workspace-3d.js"></script>
   <script src="/js/app.js"></script>
 </body>
 </html>

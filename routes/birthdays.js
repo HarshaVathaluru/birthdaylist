@@ -29,13 +29,34 @@ const upload = multer({
   }
 });
 
-function calculateDaysUntil(monthDayStr) {
+function normalizeDateStr(dateStr) {
+  if (!dateStr) return '01-01';
+  const parts = String(dateStr).trim().split('-').map(Number);
+  let m, d;
+  if (parts.length === 3) {
+    m = parts[1];
+    d = parts[2];
+  } else if (parts.length === 2) {
+    m = parts[0];
+    d = parts[1];
+  } else {
+    return '01-01';
+  }
+  const mm = String(m).padStart(2, '0');
+  const dd = String(d).padStart(2, '0');
+  return `${mm}-${dd}`;
+}
+
+function calculateDaysUntil(dateStr) {
+  if (!dateStr) return 999;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
-  const [month, day] = monthDayStr.split('-').map(Number);
+  const norm = normalizeDateStr(dateStr);
+  const [month, day] = norm.split('-').map(Number);
   
   let nextBday = new Date(today.getFullYear(), month - 1, day);
+  nextBday.setHours(0, 0, 0, 0);
   
   if (nextBday < today) {
     nextBday.setFullYear(today.getFullYear() + 1);
@@ -46,6 +67,17 @@ function calculateDaysUntil(monthDayStr) {
   return diffDays;
 }
 
+// Auto-normalize any existing database entries
+try {
+  const existingList = db.prepare('SELECT id, date FROM birthdays').all();
+  for (const row of existingList) {
+    const norm = normalizeDateStr(row.date);
+    if (norm !== row.date) {
+      db.prepare('UPDATE birthdays SET date = ? WHERE id = ?').run(norm, row.id);
+    }
+  }
+} catch (e) {}
+
 // GET all birthdays
 router.get('/', (req, res) => {
   const birthdays = db.prepare('SELECT * FROM birthdays').all();
@@ -54,6 +86,7 @@ router.get('/', (req, res) => {
     const recipients = db.prepare('SELECT * FROM recipients WHERE birthday_id = ?').all(b.id);
     return {
       ...b,
+      date: normalizeDateStr(b.date),
       photo: b.photo ? `/uploads/${b.photo}` : null,
       days_until: calculateDaysUntil(b.date),
       recipients
@@ -74,6 +107,7 @@ router.get('/:id', (req, res) => {
   const recipients = db.prepare('SELECT * FROM recipients WHERE birthday_id = ?').all(birthday.id);
   res.json({
     ...birthday,
+    date: normalizeDateStr(birthday.date),
     photo: birthday.photo ? `/uploads/${birthday.photo}` : null,
     days_until: calculateDaysUntil(birthday.date),
     recipients
@@ -130,10 +164,11 @@ router.post('/', authenticateToken, upload.single('photo'), (req, res) => {
   const { name, date, notes, reminder_enabled, recipients } = req.body;
   const photo = req.file ? req.file.filename : null;
   const reminder = reminder_enabled === 'false' || reminder_enabled === '0' ? 0 : 1;
+  const normalizedDate = normalizeDateStr(date);
 
   try {
     const stmt = db.prepare('INSERT INTO birthdays (name, date, photo, notes, reminder_enabled) VALUES (?, ?, ?, ?, ?)');
-    const info = stmt.run(name, date, photo, notes, reminder);
+    const info = stmt.run(name, normalizedDate, photo, notes, reminder);
     const birthdayId = info.lastInsertRowid;
 
     if (recipients) {
@@ -145,7 +180,11 @@ router.post('/', authenticateToken, upload.single('photo'), (req, res) => {
     }
     
     const newBirthday = db.prepare('SELECT * FROM birthdays WHERE id = ?').get(birthdayId);
-    res.status(201).json(newBirthday);
+    res.status(201).json({
+      ...newBirthday,
+      date: normalizeDateStr(newBirthday.date),
+      days_until: calculateDaysUntil(newBirthday.date)
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -156,6 +195,7 @@ router.put('/:id', authenticateToken, upload.single('photo'), (req, res) => {
   const { name, date, notes, reminder_enabled, recipients } = req.body;
   const id = req.params.id;
   const reminder = reminder_enabled === 'false' || reminder_enabled === '0' ? 0 : 1;
+  const normalizedDate = normalizeDateStr(date);
   
   const existing = db.prepare('SELECT * FROM birthdays WHERE id = ?').get(id);
   if (!existing) {
@@ -173,7 +213,7 @@ router.put('/:id', authenticateToken, upload.single('photo'), (req, res) => {
 
   try {
     const stmt = db.prepare('UPDATE birthdays SET name = ?, date = ?, photo = ?, notes = ?, reminder_enabled = ? WHERE id = ?');
-    stmt.run(name, date, photo, notes, reminder, id);
+    stmt.run(name, normalizedDate, photo, notes, reminder, id);
 
     if (recipients !== undefined) {
       db.prepare('DELETE FROM recipients WHERE birthday_id = ?').run(id);
@@ -185,7 +225,11 @@ router.put('/:id', authenticateToken, upload.single('photo'), (req, res) => {
     }
     
     const updated = db.prepare('SELECT * FROM birthdays WHERE id = ?').get(id);
-    res.json(updated);
+    res.json({
+      ...updated,
+      date: normalizeDateStr(updated.date),
+      days_until: calculateDaysUntil(updated.date)
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -255,7 +299,7 @@ router.post('/bulk-import', authenticateToken, (req, res) => {
       for (const item of list) {
         if (!item.name || !item.date) continue;
         const name = String(item.name).trim();
-        const date = String(item.date).trim();
+        const date = normalizeDateStr(String(item.date).trim());
         const notes = item.notes ? String(item.notes).trim() : null;
         const reminder = item.reminder_enabled !== undefined ? (item.reminder_enabled ? 1 : 0) : 1;
 

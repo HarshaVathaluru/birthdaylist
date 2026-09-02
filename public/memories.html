@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Circle Memories — Zenitude Workspace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav id="navbar">
+    <div class="container nav-content">
+      <a href="/" class="logo">
+        <span>Zenitude</span>
+        <span class="brand-badge">Workspace</span>
+      </a>
+      <!-- Mobile Nav Toggle Hamburger Button -->
+      <button id="mobile-nav-toggle" class="mobile-nav-btn" aria-label="Toggle Navigation Menu">
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+      </button>
+
+      <div class="nav-links" id="nav-links">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/intent" class="nav-link">Our Intent</a>
+        <a href="/founder" class="nav-link">Founder</a>
+        <a href="/chat" class="nav-link">Circle Chat</a>
+        <a href="/memories" class="nav-link active">Memories</a>
+        <button id="theme-toggle-btn" class="nav-sound-btn" title="Toggle Midnight / Sunset Theme">🌙</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section with 3D Ambient WebGL Experience -->
+  <section class="hero" style="padding-top: 140px; padding-bottom: 50px;">
+    <div class="floating-blobs">
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+      <div class="blob blob-3"></div>
+      <div class="blob blob-4"></div>
+    </div>
+    <div class="hero-content">
+      <div class="pill-badge-3d"><span>📸 CIRCLE ARCHIVES</span></div>
+      <h1 class="hero-title">Circle Memories &<br><span class="text-gradient">Milestone Highlights</span></h1>
+      <p class="hero-subtitle">Cherished memories, celebrations, and shared moments from across our workspace.</p>
+    </div>
+  </section>
+
+  <main class="container">
+
+    <section class="memories-section" style="margin-top: 40px;">
+      
+      <!-- Action Bar: Filter Tabs & Add Memory Button -->
+      <div class="memories-action-bar">
+        <div class="memories-filter-tabs" style="margin: 0;">
+          <button class="memory-filter-btn active" data-filter="all">All Memories</button>
+          <button class="memory-filter-btn" data-filter="celebrations">🎉 Celebrations</button>
+          <button class="memory-filter-btn" data-filter="milestones">🚀 Milestones</button>
+          <button class="memory-filter-btn" data-filter="gatherings">☕ Circle Gatherings</button>
+        </div>
+
+        <button id="open-add-memory-btn" class="btn-add-memory">
+          <span>📸 + Add Team Memory</span>
+        </button>
+      </div>
+
+      <!-- Memories Grid with 3D Card Tilt -->
+      <div id="memories-grid" class="memories-grid">
+        
+        <!-- Memory Card 1 -->
+        <div class="memory-card" data-category="celebrations">
+          <div class="memory-tape"></div>
+          <div class="memory-photo-box">
+            <span class="memory-placeholder-art">🎂✨</span>
+            <span class="memory-badge-tag">BIRTHDAY SURPRISE</span>
+          </div>
+          <div class="memory-body">
+            <h3 class="memory-title">Aarav's Rooftop Cake & Coffee Toast</h3>
+            <p class="memory-caption">The whole circle gathered to surprise Aarav with his favorite dark chocolate truffle cake and handwritten cards.</p>
+            <div class="memory-meta-info">
+              <div class="memory-author">
+                <span class="memory-author-avatar">M</span>
+                <span>Maya Patel</span>
+              </div>
+              <span>Sept 2026</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Memory Card 2 -->
+        <div class="memory-card" data-category="milestones">
+          <div class="memory-tape"></div>
+          <div class="memory-photo-box" style="background: linear-gradient(135deg, rgba(78,205,196,0.15), rgba(167,139,250,0.2));">
+            <span class="memory-placeholder-art">🚀🏆</span>
+            <span class="memory-badge-tag" style="background: rgba(79,70,229,0.85);">PRODUCT LAUNCH</span>
+          </div>
+          <div class="memory-body">
+            <h3 class="memory-title">Q3 Milestone Breakthrough Celebration</h3>
+            <p class="memory-caption">Celebrating the team's record milestone achievement with celebratory cheers and virtual circle shoutouts.</p>
+            <div class="memory-meta-info">
+              <div class="memory-author">
+                <span class="memory-author-avatar" style="background: linear-gradient(135deg, #4F46E5, #06B6D4);">K</span>
+                <span>Karan Mehta</span>
+              </div>
+              <span>August 2026</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Memory Card 3 -->
+        <div class="memory-card" data-category="gatherings">
+          <div class="memory-tape"></div>
+          <div class="memory-photo-box" style="background: linear-gradient(135deg, rgba(255,217,61,0.15), rgba(255,107,107,0.15));">
+            <span class="memory-placeholder-art">☕🌿</span>
+            <span class="memory-badge-tag" style="background: rgba(217,119,6,0.85);">TEAM GATHERING</span>
+          </div>
+          <div class="memory-body">
+            <h3 class="memory-title">Autumn Circle Meet & Gratitude Circle</h3>
+            <p class="memory-caption">A cozy evening reflecting on personal growth, milestones, and sharing genuine appreciation across our teams.</p>
+            <div class="memory-meta-info">
+              <div class="memory-author">
+                <span class="memory-author-avatar" style="background: linear-gradient(135deg, #F59E0B, #EF4444);">R</span>
+                <span>Rohan Verma</span>
+              </div>
+              <span>July 2026</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Memory Card 4 -->
+        <div class="memory-card" data-category="celebrations">
+          <div class="memory-tape"></div>
+          <div class="memory-photo-box" style="background: linear-gradient(135deg, rgba(244,114,182,0.15), rgba(255,107,107,0.15));">
+            <span class="memory-placeholder-art">🎈🥳</span>
+            <span class="memory-badge-tag" style="background: rgba(225,29,72,0.85);">ANNUAL GALA</span>
+          </div>
+          <div class="memory-body">
+            <h3 class="memory-title">Priya's Milestone Welcome & Cake Party</h3>
+            <p class="memory-caption">Welcoming Priya to our workspace family with personalized celebration notes and cupcakes.</p>
+            <div class="memory-meta-info">
+              <div class="memory-author">
+                <span class="memory-author-avatar" style="background: linear-gradient(135deg, #E11D48, #FB7185);">A</span>
+                <span>Ananya Singh</span>
+              </div>
+              <span>June 2026</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Bottom Return Button -->
+      <div class="intent-cta-wrapper" style="margin-top: 60px;">
+        <a href="/" class="btn-primary-action" style="text-decoration: none; padding: 14px 32px; font-size: 1rem;">
+          <span>← Return to Celebrations Dashboard</span>
+        </a>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ADD MEMORY MODAL WITH PHOTO UPLOAD & PREVIEW -->
+  <div id="add-memory-modal" class="memory-modal-overlay">
+    <div class="memory-modal-card">
+      <button id="close-memory-modal-btn" class="modal-close-btn" title="Close">✕</button>
+      
+      <div style="margin-bottom: 20px;">
+        <div class="pill-badge-3d" style="margin-bottom: 8px;"><span>📸 NEW MEMORY</span></div>
+        <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--text-heading); margin: 0;">Add Team Memory</h2>
+        <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 4px;">Upload a milestone photo and share the story with your workspace circle.</p>
+      </div>
+
+      <form id="add-memory-form">
+        
+        <!-- Photo Upload Dropzone & Live Preview -->
+        <input type="file" id="memory-file-input" accept="image/*" style="display: none;">
+        
+        <div id="memory-dropzone" class="memory-dropzone">
+          <span class="dropzone-icon">🖼️</span>
+          <div class="dropzone-text">Click or Drag & Drop photo here</div>
+          <div class="dropzone-sub">Supports PNG, JPG, JPEG, WEBP (Instant Auto-Preview)</div>
+        </div>
+
+        <!-- Live Photo Preview Box (Hidden until image selected) -->
+        <div id="memory-preview-box" class="memory-preview-box" style="display: none;">
+          <img id="memory-preview-img" src="" alt="Memory Preview">
+          <button type="button" id="remove-photo-btn" class="remove-photo-btn">✕ Remove Photo</button>
+        </div>
+
+        <!-- Memory Details -->
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div>
+            <label style="display: block; font-size: 0.84rem; font-weight: 700; color: var(--text-heading); margin-bottom: 6px;">Memory Title *</label>
+            <input type="text" id="memory-title-input" placeholder="e.g. Q4 Team Celebration & Awards" required>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <div>
+              <label style="display: block; font-size: 0.84rem; font-weight: 700; color: var(--text-heading); margin-bottom: 6px;">Category</label>
+              <select id="memory-category-input">
+                <option value="celebrations">🎉 Celebrations</option>
+                <option value="milestones">🚀 Milestones</option>
+                <option value="gatherings">☕ Circle Gatherings</option>
+              </select>
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 0.84rem; font-weight: 700; color: var(--text-heading); margin-bottom: 6px;">Badge Tag</label>
+              <input type="text" id="memory-badge-input" placeholder="e.g. MILESTONE WIN">
+            </div>
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.84rem; font-weight: 700; color: var(--text-heading); margin-bottom: 6px;">Your Name</label>
+            <input type="text" id="memory-author-input" placeholder="e.g. Vamsi Posemsetty">
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.84rem; font-weight: 700; color: var(--text-heading); margin-bottom: 6px;">Story / Heartfelt Caption</label>
+            <textarea id="memory-caption-input" rows="3" placeholder="Share a few warm words about this moment..."></textarea>
+          </div>
+        </div>
+
+        <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px;">
+          <button type="submit" id="submit-memory-btn" class="btn-primary-action" style="padding: 13px 28px; font-size: 0.95rem;">
+            <span>📸 Publish Memory to Wall</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- FULLSCREEN PHOTO LIGHTBOX MODAL -->
+  <div id="photo-lightbox-modal" class="lightbox-overlay">
+    <div class="lightbox-content-card">
+      <div style="position: relative;">
+        <button id="close-lightbox-btn" title="Close Preview">✕</button>
+        <div class="lightbox-img-wrapper">
+          <img id="lightbox-img" src="" alt="Full Memory Preview">
+        </div>
+      </div>
+      <div class="lightbox-info">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+          <span id="lightbox-badge"><span>HIGHLIGHT</span></span>
+          <span id="lightbox-date">Today</span>
+        </div>
+        <h2 id="lightbox-title"></h2>
+        <p id="lightbox-caption"></p>
+        <div class="lightbox-footer-author">
+          Shared by <strong id="lightbox-author"></strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container footer-content">
+      <p>Made with ❤️ by <strong>Zenitude.ai</strong> — Celebrate Every Milestone</p>
+    </div>
+  </footer>
+
+  <!-- Three.js 3D Library, Canvas Confetti & Workspace Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="/js/workspace-3d.js"></script>
+  <script src="/js/memories.js"></script>
+  <script>
+    // Theme toggle
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    const savedTheme = localStorage.getItem('zenitude_theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    if (themeToggleBtn) {
+      themeToggleBtn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+      themeToggleBtn.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('zenitude_theme', next);
+        themeToggleBtn.textContent = next === 'dark' ? '☀️' : '🌙';
+      });
+    }
+  </script>
+</body>
+</html>
+

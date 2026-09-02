@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Zenitude — Executive Admin Dashboard</title>
+  <title>Zenitude Workspace — Executive Admin Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
@@ -26,9 +26,9 @@
       <div class="login-header">
         <div class="login-badge">
           <span class="pulse-dot"></span>
-          <span>ADMINISTRATION PORTAL</span>
+          <span>WORKSPACE ADMIN</span>
         </div>
-        <h1 class="login-title">Zenitude</h1>
+        <h1 class="login-title">Zenitude Workspace</h1>
         <p class="login-subtitle">Sign in to manage celebrations, automation & circle members</p>
       </div>
 
@@ -84,7 +84,7 @@
       <div class="sidebar-header">
         <div class="brand-box">
           <span class="brand-logo">Zenitude</span>
-          <span class="brand-badge">ADMIN</span>
+          <span class="brand-badge" style="background: linear-gradient(135deg, var(--primary), var(--secondary));">WORKSPACE</span>
         </div>
       </div>
 
@@ -103,6 +103,11 @@
           <span class="icon">💬</span>
           <span class="nav-label">Circle Chat</span>
           <span class="badge-count" id="badge-messages-count">0</span>
+        </button>
+        <button class="nav-item" data-view="memories-section">
+          <span class="icon">📸</span>
+          <span class="nav-label">Memories</span>
+          <span class="badge-count" id="badge-memories-count">0</span>
         </button>
         <button class="nav-item" data-view="settings-section">
           <span class="icon">📧</span>
@@ -363,6 +368,53 @@
         </div>
       </section>
 
+      <!-- MEMORIES MANAGEMENT SECTION -->
+      <section id="memories-section" class="content-section hidden">
+        <div class="section-header-compact">
+          <div class="header-titles">
+            <h2>📸 Workspace Memories Wall</h2>
+            <p>Review, preview, and manage team memories, milestone photos, and automated purge cleanups.</p>
+          </div>
+          <div class="header-actions" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <select id="purge-memories-select" style="padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-heading); font-size: 0.82rem; font-weight: 600; cursor: pointer;">
+              <option value="30">🧹 Purge Older than 30 Days</option>
+              <option value="7">🧹 Purge Older than 7 Days</option>
+              <option value="90">🧹 Purge Older than 90 Days</option>
+              <option value="all">🚨 Purge ALL Memories</option>
+            </select>
+            <button type="button" class="btn-primary" id="execute-purge-memories-btn" style="padding: 8px 16px; font-size: 0.82rem; background: #EF4444; border-color: #EF4444;">
+              <span>Execute Purge</span>
+            </button>
+            <span class="badge-total" id="total-memories-count">0 Total</span>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 70px;">Photo</th>
+                  <th>Title & Tag</th>
+                  <th>Category</th>
+                  <th>Author</th>
+                  <th>Date</th>
+                  <th>Caption Story</th>
+                  <th style="text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="memories-table-body">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+            <div id="memories-empty-state" class="empty-state hidden">
+              <span class="empty-icon">📸</span>
+              <p>No workspace memories posted yet.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- SETTINGS SECTION -->
       <section id="settings-section" class="content-section hidden">
         <div class="settings-grid-layout">
@@ -501,8 +553,8 @@
           </div>
 
           <div class="input-group">
-            <label for="date">Birthday Date (MM-DD) *</label>
-            <input type="text" id="date" name="date" required placeholder="09-15" pattern="(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])" title="Format: MM-DD (e.g. 09-15 for Sept 15)">
+            <label for="date">Birthday Date *</label>
+            <input type="date" id="date" name="date" required>
           </div>
 
           <div class="input-group">
