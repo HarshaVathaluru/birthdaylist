@@ -153,22 +153,80 @@
     return div.innerHTML;
   }
 
+  // Global Modal & Filter Controller
+  window.openAddMemoryModal = function() {
+    const modal = document.getElementById('add-memory-modal');
+    if (modal) {
+      modal.classList.add('active');
+      modal.style.setProperty('display', 'flex', 'important');
+      modal.style.setProperty('opacity', '1', 'important');
+      modal.style.setProperty('visibility', 'visible', 'important');
+      modal.style.setProperty('pointer-events', 'auto', 'important');
+      modal.style.setProperty('z-index', '999999', 'important');
+    }
+  };
+
+  window.closeAddMemoryModal = function() {
+    const modal = document.getElementById('add-memory-modal');
+    if (modal) {
+      modal.classList.remove('active');
+      modal.style.setProperty('display', 'none', 'important');
+      modal.style.setProperty('opacity', '0', 'important');
+      modal.style.setProperty('visibility', 'hidden', 'important');
+      modal.style.setProperty('pointer-events', 'none', 'important');
+    }
+  };
+
+  window.filterMemories = function(btnElem, filter) {
+    const filterBtns = document.querySelectorAll('.memory-filter-btn');
+    filterBtns.forEach(b => {
+      b.classList.remove('active');
+      b.style.background = '';
+      b.style.color = '';
+      b.style.borderColor = '';
+    });
+    if (btnElem) {
+      btnElem.classList.add('active');
+      btnElem.style.background = 'linear-gradient(135deg, #FF6B6B, #FF8E53)';
+      btnElem.style.color = '#FFFFFF';
+      btnElem.style.borderColor = 'transparent';
+    }
+
+    const cards = document.querySelectorAll('.memory-card');
+    cards.forEach(card => {
+      const cat = card.getAttribute('data-category');
+      if (filter === 'all' || cat === filter) {
+        card.style.display = 'flex';
+        card.style.opacity = '1';
+        card.style.transform = 'scale(1)';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    if (typeof confetti === 'function' && filter !== 'all') {
+      confetti({ particleCount: 20, spread: 50, origin: { y: 0.6 } });
+    }
+  };
+
   // Modal Open / Close
-  if (openModalBtn && addModal) {
-    openModalBtn.addEventListener('click', () => {
-      addModal.classList.add('active');
+  if (openModalBtn) {
+    openModalBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.openAddMemoryModal();
     });
   }
 
-  if (closeModalBtn && addModal) {
-    closeModalBtn.addEventListener('click', () => {
-      addModal.classList.remove('active');
+  if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.closeAddMemoryModal();
     });
   }
 
   if (addModal) {
     addModal.addEventListener('click', (e) => {
-      if (e.target === addModal) addModal.classList.remove('active');
+      if (e.target === addModal) window.closeAddMemoryModal();
     });
   }
 

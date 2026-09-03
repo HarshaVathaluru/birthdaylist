@@ -1933,3 +1933,62 @@ input:focus, select:focus, textarea:focus {
   transform: translateY(-2px) !important;
   box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5) !important;
 }
+
+/* ========================================
+   ADMIN RESPONSIVE TWEAKS (PRESERVING DESKTOP DASHBOARD LAYOUT)
+   ======================================== */
+.celebrants-table-wrap, .table-card {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  #dashboard-view {
+    flex-direction: column;
+    height: auto;
+    overflow: visible;
+  }
+
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .admin-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .search-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .modal-card {
+    max-width: calc(100vw - 28px);
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}

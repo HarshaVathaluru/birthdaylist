@@ -1167,13 +1167,26 @@
 
   // Initialize
   document.addEventListener('DOMContentLoaded', () => {
-    initHero3D();
-    initRadar3DPrism();
-    initIntent3DSculpture();
-    initFounderNeuralMatrix();
-    initFounderQuantumCore();
-    init3DCardTilt();
-    initMobileNavigation();
+    try {
+      if (typeof initHero3D === 'function') initHero3D();
+    } catch (e) {
+      console.warn('[Zenitude 3D] Hero init error:', e);
+    }
+    try {
+      if (typeof initRadar3DPrism === 'function') initRadar3DPrism();
+    } catch (e) {
+      console.warn('[Zenitude 3D] Radar init error:', e);
+    }
+    try {
+      if (typeof init3DCardTilt === 'function') init3DCardTilt();
+    } catch (e) {
+      console.warn('[Zenitude 3D] Tilt init error:', e);
+    }
+    try {
+      if (typeof initMobileNavigation === 'function') initMobileNavigation();
+    } catch (e) {
+      console.warn('[Zenitude 3D] Mobile nav init error:', e);
+    }
   });
 
   // Universal 3D Animated Centered Celebration Toast / Modal Engine

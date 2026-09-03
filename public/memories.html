@@ -60,14 +60,14 @@
       
       <!-- Action Bar: Filter Tabs & Add Memory Button -->
       <div class="memories-action-bar">
-        <div class="memories-filter-tabs" style="margin: 0;">
-          <button class="memory-filter-btn active" data-filter="all">All Memories</button>
-          <button class="memory-filter-btn" data-filter="celebrations">🎉 Celebrations</button>
-          <button class="memory-filter-btn" data-filter="milestones">🚀 Milestones</button>
-          <button class="memory-filter-btn" data-filter="gatherings">☕ Circle Gatherings</button>
+        <div class="memories-filter-tabs">
+          <button type="button" class="memory-filter-btn active" data-filter="all" onclick="window.filterMemories(this, 'all')">All Memories</button>
+          <button type="button" class="memory-filter-btn" data-filter="celebrations" onclick="window.filterMemories(this, 'celebrations')">🎉 Celebrations</button>
+          <button type="button" class="memory-filter-btn" data-filter="milestones" onclick="window.filterMemories(this, 'milestones')">🚀 Milestones</button>
+          <button type="button" class="memory-filter-btn" data-filter="gatherings" onclick="window.filterMemories(this, 'gatherings')">☕ Circle Gatherings</button>
         </div>
 
-        <button id="open-add-memory-btn" class="btn-add-memory">
+        <button type="button" id="open-add-memory-btn" class="btn-add-memory" onclick="window.openAddMemoryModal()">
           <span>📸 + Add Team Memory</span>
         </button>
       </div>
@@ -171,7 +171,7 @@
   <!-- ADD MEMORY MODAL WITH PHOTO UPLOAD & PREVIEW -->
   <div id="add-memory-modal" class="memory-modal-overlay">
     <div class="memory-modal-card">
-      <button id="close-memory-modal-btn" class="modal-close-btn" title="Close">✕</button>
+      <button type="button" id="close-memory-modal-btn" class="modal-close-btn" onclick="window.closeAddMemoryModal()" title="Close">✕</button>
       
       <div style="margin-bottom: 20px;">
         <div class="pill-badge-3d" style="margin-bottom: 8px;"><span>📸 NEW MEMORY</span></div>
@@ -292,6 +292,62 @@
         themeToggleBtn.textContent = next === 'dark' ? '☀️' : '🌙';
       });
     }
+
+    // Direct Bulletproof Memories Controller
+    window.openAddMemoryModal = function() {
+      var modal = document.getElementById('add-memory-modal');
+      if (modal) {
+        modal.classList.add('active');
+        modal.style.setProperty('display', 'flex', 'important');
+        modal.style.setProperty('opacity', '1', 'important');
+        modal.style.setProperty('visibility', 'visible', 'important');
+        modal.style.setProperty('pointer-events', 'auto', 'important');
+        modal.style.setProperty('z-index', '999999', 'important');
+      }
+    };
+
+    window.closeAddMemoryModal = function() {
+      var modal = document.getElementById('add-memory-modal');
+      if (modal) {
+        modal.classList.remove('active');
+        modal.style.setProperty('display', 'none', 'important');
+        modal.style.setProperty('opacity', '0', 'important');
+        modal.style.setProperty('visibility', 'hidden', 'important');
+        modal.style.setProperty('pointer-events', 'none', 'important');
+      }
+    };
+
+    window.filterMemories = function(btnElem, filter) {
+      var filterBtns = document.querySelectorAll('.memory-filter-btn');
+      filterBtns.forEach(function(b) {
+        b.classList.remove('active');
+        b.style.background = '';
+        b.style.color = '';
+        b.style.borderColor = '';
+      });
+      if (btnElem) {
+        btnElem.classList.add('active');
+        btnElem.style.background = 'linear-gradient(135deg, #FF6B6B, #FF8E53)';
+        btnElem.style.color = '#FFFFFF';
+        btnElem.style.borderColor = 'transparent';
+      }
+
+      var cards = document.querySelectorAll('.memory-card');
+      cards.forEach(function(card) {
+        var cat = card.getAttribute('data-category');
+        if (filter === 'all' || cat === filter) {
+          card.style.display = 'flex';
+          card.style.opacity = '1';
+          card.style.transform = 'scale(1)';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      if (typeof confetti === 'function' && filter !== 'all') {
+        confetti({ particleCount: 25, spread: 45, origin: { y: 0.6 } });
+      }
+    };
   </script>
 </body>
 </html>
