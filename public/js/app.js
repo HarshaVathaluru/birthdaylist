@@ -189,11 +189,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Download Greeting Card button
+  // Download Greeting Card button -> Open Luxury Card Studio
   if (downloadCardBtn) {
     downloadCardBtn.addEventListener('click', () => {
       if (!activeWishRecipient) return;
-      generateAndDownloadCard(activeWishRecipient.name, wishCustomText.value);
+      if (window.CardStudio) {
+        closeWishModal();
+        window.CardStudio.open(activeWishRecipient.name, 'Birthday Celebration');
+      } else {
+        generateAndDownloadCard(activeWishRecipient.name, wishCustomText.value);
+      }
     });
   }
 

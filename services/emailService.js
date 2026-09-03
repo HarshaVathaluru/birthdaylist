@@ -274,7 +274,7 @@ function generateCircleIntimationEmailHtml(birthday, daysUntil, recipientName = 
 
   const occasionBadge = isToday
     ? `<span style="display: inline-block; background: #ECFDF5; color: #059669; font-size: 10.5px; font-weight: 800; padding: 3px 8px; border-radius: 4px; letter-spacing: 1px; text-transform: uppercase;">TODAY'S CELEBRATION</span>`
-    : `<span style="display: inline-block; background: #EEF2FF; color: #4F46E5; font-size: 10.5px; font-weight: 800; padding: 3px 8px; border-radius: 4px; letter-spacing: 1px; text-transform: uppercase;">2-DAY ADVANCE NOTICE</span>`;
+    : `<span style="display: inline-block; background: #EEF2FF; color: #4F46E5; font-size: 10.5px; font-weight: 800; padding: 3px 8px; border-radius: 4px; letter-spacing: 1px; text-transform: uppercase;">${daysUntil}-DAY ADVANCE REMINDER</span>`;
 
   const leadParagraph = isToday
     ? `We are writing to let you know that today, <strong>${formattedDate}</strong>, is <strong>${celebrantName}'s birthday!</strong>`
@@ -599,12 +599,17 @@ async function sendBirthdayReminder(birthday, recipients = [], daysUntil, custom
 
   let successCount = 0;
   const celebrantCleanName = (birthday.name || '').trim().toLowerCase();
+  const celebrantDirectEmail = (birthday.email || '').trim().toLowerCase();
+  let birthdayPersonDelivered = false;
 
   for (const contact of contacts) {
     const contactName = (contact.name || '').trim();
+    const contactEmail = (contact.email || '').trim().toLowerCase();
+
     const isBirthdayPerson = (
+      (celebrantDirectEmail && contactEmail === celebrantDirectEmail) ||
       (contactName && contactName.toLowerCase() === celebrantCleanName) ||
-      (contact.email && contact.email.toLowerCase().includes(celebrantCleanName.replace(/\s+/g, '')))
+      (contactEmail && contactEmail.includes(celebrantCleanName.replace(/\s+/g, '')))
     );
 
     // Rule: The 2-day advance reminder must NOT be sent to the birthday person themselves
@@ -620,6 +625,7 @@ async function sendBirthdayReminder(birthday, recipients = [], daysUntil, custom
       // VIP Celebrant Wish (only on their actual birthday)
       subject = `✨ Happy Birthday, ${birthday.name}! — From the Zenitude Circle`;
       htmlContent = generateBirthdayPersonWishEmailHtml(birthday, customMessage);
+      birthdayPersonDelivered = true;
     } else {
       // Circle Member Intimation
       subject = isToday
@@ -643,7 +649,23 @@ async function sendBirthdayReminder(birthday, recipients = [], daysUntil, custom
     }
   }
 
-  console.log(`[Email Service] Dispatched tailored professional emails for ${birthday.name} to ${successCount}/${contacts.length} recipients via ${config.provider.toUpperCase()}.`);
+  // If today and celebrant has a direct email configured, ensure they receive their VIP Wish
+  if (isToday && celebrantDirectEmail && !birthdayPersonDelivered) {
+    try {
+      await sendSingleEmailMessage({
+        to: birthday.name ? `"${birthday.name}" <${birthday.email.trim()}>` : birthday.email.trim(),
+        subject: `✨ Happy Birthday, ${birthday.name}! — From the Zenitude Circle`,
+        html: generateBirthdayPersonWishEmailHtml(birthday, customMessage),
+        attachments: attachments
+      });
+      successCount++;
+      console.log(`[Email Service] Directly sent VIP celebration wish to celebrant email: ${birthday.email}`);
+    } catch (err) {
+      console.error(`[Email Service] Failed sending direct celebrant email to ${birthday.email}:`, err.message);
+    }
+  }
+
+  console.log(`[Email Service] Dispatched tailored professional emails for ${birthday.name} to ${successCount} recipients via ${config.provider.toUpperCase()}.`);
   return { success: true, recipientCount: successCount };
 }
 
@@ -706,10 +728,11 @@ function startCronJob() {
       
       for (const birthday of birthdays) {
         const daysUntil = calculateDaysUntil(birthday.date);
+        const targetAlertDays = parseInt(birthday.remind_days_before !== undefined ? birthday.remind_days_before : 2, 10);
         
-        // Send on exactly 2 days away (reminder) or 0 days away (today!)
-        if (daysUntil === 2 || daysUntil === 0) {
-          console.log(`[Cron 07:00 AM] Triggering ${daysUntil === 0 ? 'Today' : '2-day'} notification for ${birthday.name}...`);
+        // Trigger on the configured advance alert days (e.g. 2, 3, 5 days) or today (0 days)
+        if (daysUntil === targetAlertDays || daysUntil === 0) {
+          console.log(`[Cron 07:00 AM] Triggering ${daysUntil === 0 ? 'Today' : targetAlertDays + '-day advance'} notification for ${birthday.name}...`);
           await sendBirthdayReminder(birthday, [], daysUntil);
         }
       }

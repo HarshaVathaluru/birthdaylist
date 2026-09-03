@@ -31,6 +31,9 @@
         <a href="/founder" class="nav-link">Founder</a>
         <a href="/chat" class="nav-link">Circle Chat</a>
         <a href="/memories" class="nav-link">Memories</a>
+        <button type="button" class="btn-ai-sparkle btn-nav-card-studio" style="padding: 6px 12px; font-size: 0.8rem; cursor: pointer;" onclick="if(window.CardStudio) window.CardStudio.open('Celebrated Colleague', 'Birthday Celebration');">
+          <span>🎨 VIP Card</span>
+        </button>
         <button id="theme-toggle-btn" class="nav-sound-btn" title="Toggle Midnight / Sunset Theme">🌙</button>
       </div>
     </div>
@@ -45,41 +48,49 @@
       <div class="blob blob-4"></div>
     </div>
     <div class="hero-content">
-      <div class="pill-badge-3d"><span>🕊️ THE ZENITUDE PHILOSOPHY</span></div>
-      <h1 class="hero-title">Designed for<br><span class="text-gradient">Meaningful Connections</span></h1>
-      <p class="hero-subtitle">Zenitude Workspace exists to bring intention, warmth, and peace of mind back to celebrating team milestones.</p>
+      <div class="pill-badge-3d"><span>✨ THE MOTIVE & HEART</span></div>
+      <h1 class="hero-title">Our Intent</h1>
+      <p class="hero-subtitle">Why we built Zenitude.ai — creating mindful connection, effortless recognition, and peace of mind in every workplace.</p>
     </div>
   </section>
 
-  <main class="container">
+  <!-- Intent Content Container -->
+  <main class="container intent-page-container">
+    
+    <!-- Hero Lotus Crystal 3D Container -->
+    <div class="intent-3d-wrapper">
+      <div id="intent-3d-canvas-container" class="intent-3d-box"></div>
+    </div>
 
-    <section class="intent-section">
-      
-      <!-- Philosophy / Mission Statement Box -->
-      <div class="intent-quote-box">
-        <p class="intent-quote-text">"In a busy world, remembering someone's special day isn't just about dates on a calendar — it's about honoring the bond you share and making them feel truly seen."</p>
-        <span class="intent-quote-author">The Zenitude Philosophy</span>
+    <!-- The Intent Narrative -->
+    <div class="intent-narrative-card">
+      <div class="intent-quote-block">
+        <p class="intent-quote-text">
+          "Zenitude.ai is a peace of intelligent tech crafted to bring peace of mind, zero administrative overhead, and heartfelt recognition to every workplace."
+        </p>
       </div>
+    </div>
 
-      <!-- Bottom Return Button -->
-      <div class="intent-cta-wrapper">
-        <a href="/" class="btn-primary-action" style="text-decoration: none; padding: 14px 32px; font-size: 1rem;">
-          <span>← Return to Celebrations Dashboard</span>
-        </a>
-      </div>
-
-    </section>
+    <!-- Return to Celebrations Dashboard -->
+    <div class="intent-cta-wrapper">
+      <a href="/" class="btn-return-home">
+        <span>← Return to Celebrations Dashboard</span>
+      </a>
+    </div>
 
   </main>
 
   <footer>
     <div class="container footer-content">
-      <p>Made with ❤️ by <strong>Zenitude Workspace</strong> — Celebrate Every Milestone</p>
+      <p>Made with ❤️ by <strong>Zenitude.ai</strong> — Empowering Purpose, Intelligence & Milestones</p>
     </div>
   </footer>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="/js/workspace-3d.js"></script>
+  <script src="/js/floating-reactions.js"></script>
+  <script src="/js/ai-warmth-wizard.js"></script>
+  <script src="/js/card-studio.js"></script>
   <script>
     // Theme toggle
     const themeToggleBtn = document.getElementById('theme-toggle-btn');

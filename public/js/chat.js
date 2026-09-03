@@ -261,22 +261,28 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       // Attach delete click listener
-      item.querySelector('.btn-delete-msg').addEventListener('click', async (e) => {
+      item.querySelector('.btn-delete-msg').addEventListener('click', (e) => {
         e.stopPropagation();
-        if (!confirm('Are you sure you want to delete this message?')) return;
-
-        try {
-          const res = await fetch(`/api/messages/${msg.id}`, { method: 'DELETE' });
-          const data = await res.json();
-          if (res.ok) {
-            showUserToast('Message deleted', 'success');
-            await fetchMessages();
-          } else {
-            showUserToast(data.error || 'Failed to delete message', 'error');
+        window.showZenitudeConfirm({
+          title: 'Delete Message?',
+          message: 'Are you sure you want to delete this message from Circle Chat?',
+          icon: '🗑️',
+          confirmText: 'Delete Message',
+          onConfirm: async () => {
+            try {
+              const res = await fetch(`/api/messages/${msg.id}`, { method: 'DELETE' });
+              const data = await res.json();
+              if (res.ok) {
+                showUserToast('Message deleted', 'success');
+                await fetchMessages();
+              } else {
+                showUserToast(data.error || 'Failed to delete message', 'error');
+              }
+            } catch (err) {
+              showUserToast('Error deleting message', 'error');
+            }
           }
-        } catch (err) {
-          showUserToast('Error deleting message', 'error');
-        }
+        });
       });
 
       chatMessagesList.appendChild(item);
@@ -320,6 +326,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function showUserToast(message, type = 'info') {
+    if (window.showZenitudeNotification) {
+      const isSuccess = type === 'success';
+      const isError = type === 'error';
+      window.showZenitudeNotification({
+        title: isSuccess ? 'Success!' : (isError ? 'Notice' : 'Circle Update'),
+        message: message,
+        icon: isSuccess ? '✨' : (isError ? '⚠️' : '💬'),
+        type: isSuccess ? 'success' : (isError ? 'warning' : 'info')
+      });
+      return;
+    }
+
     let container = document.getElementById('user-toast-container');
     if (!container) {
       container = document.createElement('div');

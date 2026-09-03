@@ -31,6 +31,9 @@
         <a href="/founder" class="nav-link active">Founder</a>
         <a href="/chat" class="nav-link">Circle Chat</a>
         <a href="/memories" class="nav-link">Memories</a>
+        <button type="button" class="btn-ai-sparkle btn-nav-card-studio" style="padding: 6px 12px; font-size: 0.8rem; cursor: pointer;" onclick="if(window.CardStudio) window.CardStudio.open('Celebrated Colleague', 'Birthday Celebration');">
+          <span>🎨 VIP Card</span>
+        </button>
         <button id="theme-toggle-btn" class="nav-sound-btn" title="Toggle Midnight / Sunset Theme">🌙</button>
       </div>
     </div>
@@ -165,6 +168,9 @@
   <!-- Three.js 3D Library & Workspace Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="/js/workspace-3d.js"></script>
+  <script src="/js/floating-reactions.js"></script>
+  <script src="/js/ai-warmth-wizard.js"></script>
+  <script src="/js/card-studio.js"></script>
   <script>
     // Theme toggle
     const themeToggleBtn = document.getElementById('theme-toggle-btn');

@@ -31,6 +31,9 @@
         <a href="/founder" class="nav-link">Founder</a>
         <a href="/chat" class="nav-link">Circle Chat</a>
         <a href="/memories" class="nav-link active">Memories</a>
+        <button type="button" class="btn-ai-sparkle btn-nav-card-studio" style="padding: 6px 12px; font-size: 0.8rem; cursor: pointer;" onclick="if(window.CardStudio) window.CardStudio.open('Celebrated Colleague', 'Birthday Celebration');">
+          <span>🎨 VIP Card</span>
+        </button>
         <button id="theme-toggle-btn" class="nav-sound-btn" title="Toggle Midnight / Sunset Theme">🌙</button>
       </div>
     </div>
@@ -80,12 +83,12 @@
             <span class="memory-badge-tag">BIRTHDAY SURPRISE</span>
           </div>
           <div class="memory-body">
-            <h3 class="memory-title">Aarav's Rooftop Cake & Coffee Toast</h3>
-            <p class="memory-caption">The whole circle gathered to surprise Aarav with his favorite dark chocolate truffle cake and handwritten cards.</p>
+            <h3 class="memory-title">Workspace Celebration & Cake Toast</h3>
+            <p class="memory-caption">The whole circle gathered together to share delicious cake, joyful memories, and heartfelt wishes.</p>
             <div class="memory-meta-info">
               <div class="memory-author">
-                <span class="memory-author-avatar">M</span>
-                <span>Maya Patel</span>
+                <span class="memory-author-avatar">C</span>
+                <span>Circle Member</span>
               </div>
               <span>Sept 2026</span>
             </div>
@@ -218,7 +221,7 @@
 
           <div>
             <label style="display: block; font-size: 0.84rem; font-weight: 700; color: var(--text-heading); margin-bottom: 6px;">Your Name</label>
-            <input type="text" id="memory-author-input" placeholder="e.g. Vamsi Posemsetty">
+            <input type="text" id="memory-author-input" placeholder="Enter your name">
           </div>
 
           <div>
@@ -270,6 +273,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script src="/js/workspace-3d.js"></script>
+  <script src="/js/floating-reactions.js"></script>
+  <script src="/js/ai-warmth-wizard.js"></script>
+  <script src="/js/card-studio.js"></script>
   <script src="/js/memories.js"></script>
   <script>
     // Theme toggle

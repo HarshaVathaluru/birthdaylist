@@ -1173,8 +1173,123 @@
     initFounderNeuralMatrix();
     initFounderQuantumCore();
     init3DCardTilt();
-    initMemoriesFilter();
     initMobileNavigation();
   });
+
+  // Universal 3D Animated Centered Celebration Toast / Modal Engine
+  window.showZenitudeNotification = function (options = {}) {
+    const title = options.title || 'Success!';
+    const message = options.message || '';
+    const icon = options.icon || '✨';
+    const type = options.type || 'success';
+    const duration = options.duration !== undefined ? options.duration : 3500;
+
+    let existing = document.getElementById('zen-centered-3d-toast');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'zen-centered-3d-toast';
+    toast.className = 'zen-3d-toast-overlay';
+    toast.innerHTML = `
+      <div class="zen-3d-toast-card">
+        <div class="zen-3d-toast-icon-wrapper">
+          <div class="zen-3d-toast-pulse-ring"></div>
+          <div class="zen-3d-toast-icon">${icon}</div>
+        </div>
+        <h3 class="zen-3d-toast-title">${title}</h3>
+        <p class="zen-3d-toast-message">${message}</p>
+        <button type="button" class="zen-3d-toast-btn">
+          <span>✨ Continue</span>
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(toast);
+
+    if (type === 'success' || type === 'celebrate') {
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 45,
+          spread: 70,
+          origin: { y: 0.5 }
+        });
+      }
+    }
+
+    requestAnimationFrame(() => {
+      toast.classList.add('active');
+    });
+
+    const closeToast = () => {
+      toast.classList.remove('active');
+      setTimeout(() => toast.remove(), 350);
+    };
+
+    toast.querySelector('.zen-3d-toast-btn').addEventListener('click', closeToast);
+    toast.addEventListener('click', (e) => {
+      if (e.target === toast) closeToast();
+    });
+
+    if (duration > 0) {
+      setTimeout(closeToast, duration);
+    }
+  };
+
+  // Universal 3D Animated Centered Confirmation Dialog Engine
+  window.showZenitudeConfirm = function (options = {}) {
+    const title = options.title || 'Confirm Action';
+    const message = options.message || 'Are you sure you want to proceed?';
+    const icon = options.icon || '⚠️';
+    const confirmText = options.confirmText || 'Yes, Proceed';
+    const cancelText = options.cancelText || 'Cancel';
+    const confirmBg = options.confirmColor || 'linear-gradient(135deg, #EF4444, #DC2626)';
+    const onConfirm = options.onConfirm || (() => {});
+
+    let existing = document.getElementById('zen-centered-3d-confirm');
+    if (existing) existing.remove();
+
+    const dialog = document.createElement('div');
+    dialog.id = 'zen-centered-3d-confirm';
+    dialog.className = 'zen-3d-toast-overlay';
+    dialog.innerHTML = `
+      <div class="zen-3d-toast-card">
+        <div class="zen-3d-toast-icon-wrapper">
+          <div class="zen-3d-toast-pulse-ring"></div>
+          <div class="zen-3d-toast-icon">${icon}</div>
+        </div>
+        <h3 class="zen-3d-toast-title">${title}</h3>
+        <p class="zen-3d-toast-message">${message}</p>
+        <div style="display: flex; justify-content: center; gap: 12px; margin-top: 14px;">
+          <button type="button" class="zen-3d-cancel-btn">
+            <span>${cancelText}</span>
+          </button>
+          <button type="button" class="zen-3d-confirm-btn" style="background: ${confirmBg} !important;">
+            <span>${confirmText}</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(dialog);
+
+    requestAnimationFrame(() => {
+      dialog.classList.add('active');
+    });
+
+    const closeDialog = () => {
+      dialog.classList.remove('active');
+      setTimeout(() => dialog.remove(), 350);
+    };
+
+    dialog.querySelector('.zen-3d-cancel-btn').addEventListener('click', closeDialog);
+    dialog.querySelector('.zen-3d-confirm-btn').addEventListener('click', () => {
+      closeDialog();
+      onConfirm();
+    });
+
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) closeDialog();
+    });
+  };
 
 })();

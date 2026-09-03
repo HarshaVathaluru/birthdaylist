@@ -31,6 +31,9 @@
         <a href="/founder" class="nav-link">Founder</a>
         <a href="/chat" class="nav-link active">Circle Chat</a>
         <a href="/memories" class="nav-link">Memories</a>
+        <button type="button" class="btn-ai-sparkle btn-nav-card-studio" style="padding: 6px 12px; font-size: 0.8rem; cursor: pointer;" onclick="if(window.CardStudio) window.CardStudio.open('Celebrated Colleague', 'Birthday Celebration');">
+          <span>🎨 VIP Card</span>
+        </button>
         <button id="theme-toggle-btn" class="nav-sound-btn" title="Toggle Midnight / Sunset Theme">🌙</button>
       </div>
     </div>
@@ -76,12 +79,17 @@
           </h2>
           <p class="chat-form-subtitle">Share warm greetings, milestone shoutouts, or joyful memories with the circle.</p>
 
-          <!-- Interactive Note Mood Quick Selectors -->
-          <div class="note-mood-tabs">
+          <!-- Interactive Note Mood Quick Selectors with AI Warmth Wizard & Card Studio -->
+          <div class="note-mood-tabs" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
             <button type="button" class="note-mood-btn" data-prefix="🎉 Wishing you a wonderful celebration filled with joy and happiness! ">🎉 Birthday</button>
             <button type="button" class="note-mood-btn" data-prefix="🚀 Congratulations on this awesome milestone! Proud of your hard work! ">🚀 Milestone</button>
             <button type="button" class="note-mood-btn" data-prefix="💖 So grateful to work alongside you! Thank you for being wonderful! ">💖 Appreciation</button>
-            <button type="button" class="note-mood-btn" data-prefix="☕ Wishing you a fantastic day ahead full of great smiles and success! ">☕ Cheer</button>
+            <button type="button" id="chat-open-ai-wizard-btn" class="btn-ai-sparkle" style="padding: 6px 14px; font-size: 0.82rem;">
+              <span>✨ AI Warmth Wizard</span>
+            </button>
+            <button type="button" id="chat-open-studio-btn" class="btn-ai-sparkle" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.15)); border-color: rgba(59, 130, 246, 0.35); color: #2563EB; padding: 6px 14px; font-size: 0.82rem;">
+              <span>🎨 Design VIP Card</span>
+            </button>
           </div>
 
           <!-- Replying banner (hidden by default) -->
@@ -98,7 +106,7 @@
               <label for="sender_name">Your Name</label>
               <div class="input-with-icon">
                 <span class="input-prefix-icon">👤</span>
-                <input type="text" id="sender_name" name="sender_name" placeholder="e.g. Maya Patel" required maxlength="50">
+                <input type="text" id="sender_name" name="sender_name" placeholder="Enter your name" required maxlength="50">
               </div>
             </div>
 
@@ -173,6 +181,35 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="/js/workspace-3d.js"></script>
+  <script src="/js/ai-warmth-wizard.js"></script>
+  <script src="/js/card-studio.js"></script>
   <script src="/js/chat.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const openAiBtn = document.getElementById('chat-open-ai-wizard-btn');
+      const openStudioBtn = document.getElementById('chat-open-studio-btn');
+      const msgInput = document.getElementById('message_text');
+      const nameInput = document.getElementById('sender_name');
+
+      if (openAiBtn) {
+        openAiBtn.addEventListener('click', () => {
+          if (window.AIWarmthWizard) {
+            window.AIWarmthWizard.open({
+              targetInput: msgInput,
+              name: ''
+            });
+          }
+        });
+      }
+
+      if (openStudioBtn) {
+        openStudioBtn.addEventListener('click', () => {
+          if (window.CardStudio) {
+            window.CardStudio.open('Valued Colleague', 'Birthday Celebration');
+          }
+        });
+      }
+    });
+  </script>
 </body>
 </html>

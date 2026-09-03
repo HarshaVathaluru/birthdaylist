@@ -161,14 +161,16 @@ function parseRecipientsInput(input) {
 
 // POST new birthday
 router.post('/', authenticateToken, upload.single('photo'), (req, res) => {
-  const { name, date, notes, reminder_enabled, recipients } = req.body;
+  const { name, email, date, remind_days_before, notes, reminder_enabled, recipients } = req.body;
   const photo = req.file ? req.file.filename : null;
   const reminder = reminder_enabled === 'false' || reminder_enabled === '0' ? 0 : 1;
   const normalizedDate = normalizeDateStr(date);
+  const celebrantEmail = email ? email.trim() : null;
+  const alertDays = parseInt(remind_days_before || 2, 10);
 
   try {
-    const stmt = db.prepare('INSERT INTO birthdays (name, date, photo, notes, reminder_enabled) VALUES (?, ?, ?, ?, ?)');
-    const info = stmt.run(name, normalizedDate, photo, notes, reminder);
+    const stmt = db.prepare('INSERT INTO birthdays (name, email, date, remind_days_before, photo, notes, reminder_enabled) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    const info = stmt.run(name, celebrantEmail, normalizedDate, alertDays, photo, notes, reminder);
     const birthdayId = info.lastInsertRowid;
 
     if (recipients) {
@@ -192,10 +194,12 @@ router.post('/', authenticateToken, upload.single('photo'), (req, res) => {
 
 // PUT update birthday
 router.put('/:id', authenticateToken, upload.single('photo'), (req, res) => {
-  const { name, date, notes, reminder_enabled, recipients } = req.body;
+  const { name, email, date, remind_days_before, notes, reminder_enabled, recipients } = req.body;
   const id = req.params.id;
   const reminder = reminder_enabled === 'false' || reminder_enabled === '0' ? 0 : 1;
   const normalizedDate = normalizeDateStr(date);
+  const celebrantEmail = email ? email.trim() : null;
+  const alertDays = parseInt(remind_days_before || 2, 10);
   
   const existing = db.prepare('SELECT * FROM birthdays WHERE id = ?').get(id);
   if (!existing) {
@@ -212,8 +216,8 @@ router.put('/:id', authenticateToken, upload.single('photo'), (req, res) => {
   }
 
   try {
-    const stmt = db.prepare('UPDATE birthdays SET name = ?, date = ?, photo = ?, notes = ?, reminder_enabled = ? WHERE id = ?');
-    stmt.run(name, normalizedDate, photo, notes, reminder, id);
+    const stmt = db.prepare('UPDATE birthdays SET name = ?, email = ?, date = ?, remind_days_before = ?, photo = ?, notes = ?, reminder_enabled = ? WHERE id = ?');
+    stmt.run(name, celebrantEmail, normalizedDate, alertDays, photo, notes, reminder, id);
 
     if (recipients !== undefined) {
       db.prepare('DELETE FROM recipients WHERE birthday_id = ?').run(id);
@@ -336,16 +340,15 @@ router.get('/export/csv', authenticateToken, (req, res) => {
   try {
     const list = db.prepare('SELECT * FROM birthdays ORDER BY name ASC').all();
     const rows = [
-      ['Name', 'Date', 'Notes', 'ReminderEnabled', 'Recipients'].join(',')
+      ['Name', 'Email', 'Date', 'AdvanceAlertDays', 'Notes', 'ReminderEnabled'].join(',')
     ];
 
     for (const b of list) {
-      const recs = db.prepare('SELECT email FROM recipients WHERE birthday_id = ?').all(b.id);
-      const emailList = recs.map(r => r.email).join('; ');
       const escapedName = `"${(b.name || '').replace(/"/g, '""')}"`;
+      const escapedEmail = `"${(b.email || '').replace(/"/g, '""')}"`;
       const escapedNotes = `"${(b.notes || '').replace(/"/g, '""')}"`;
-      const escapedEmails = `"${emailList.replace(/"/g, '""')}"`;
-      rows.push([escapedName, b.date, escapedNotes, b.reminder_enabled, escapedEmails].join(','));
+      const alertDays = b.remind_days_before || 2;
+      rows.push([escapedName, escapedEmail, b.date, alertDays, escapedNotes, b.reminder_enabled].join(','));
     }
 
     const csvContent = rows.join('\n');

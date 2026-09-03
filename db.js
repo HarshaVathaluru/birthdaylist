@@ -18,6 +18,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS birthdays (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
+    email TEXT,
     date TEXT NOT NULL,
     photo TEXT,
     notes TEXT,
@@ -141,6 +142,15 @@ function initSampleData() {
     console.error('[Database] Error seeding sample birthdays:', err.message);
   }
 }
+
+// Migration: Ensure birthdays table has email and remind_days_before columns
+try {
+  db.exec("ALTER TABLE birthdays ADD COLUMN email TEXT;");
+} catch (e) {}
+
+try {
+  db.exec("ALTER TABLE birthdays ADD COLUMN remind_days_before INTEGER DEFAULT 2;");
+} catch (e) {}
 
 initAdminAccount();
 initDefaultSettings();

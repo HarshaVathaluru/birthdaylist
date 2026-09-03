@@ -1110,24 +1110,339 @@ input[type="text"],
 input[type="email"],
 input[type="password"],
 input[type="number"],
+input[type="date"],
 select,
 textarea {
   width: 100%;
   padding: 12px 16px;
   background: var(--light);
-  border: 1px solid var(--border-color);
+  border: 1.5px solid var(--border-color);
   border-radius: var(--radius-md);
   font-family: var(--font);
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   color: var(--dark);
   outline: none;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+}
+
+/* Custom Celebration Calendar Picker Component */
+.custom-date-picker-group {
+  position: relative !important;
+}
+
+.custom-date-trigger-wrap {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.custom-date-trigger {
+  cursor: pointer !important;
+  background: var(--light) !important;
+  border: 1.5px solid var(--border-color) !important;
+  border-radius: var(--radius-md) !important;
+  height: 46px !important;
+  padding: 0 42px 0 16px !important;
+  font-weight: 600 !important;
+  color: var(--dark) !important;
+  font-size: 0.92rem !important;
+  transition: all 0.2s ease !important;
+  width: 100% !important;
+}
+
+.custom-date-trigger:hover {
+  border-color: var(--primary) !important;
+  background: var(--card-bg) !important;
+}
+
+.custom-date-trigger:focus, .custom-date-trigger.active {
+  border-color: var(--primary) !important;
+  background: var(--card-bg) !important;
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.18) !important;
+}
+
+.custom-date-icon {
+  position: absolute !important;
+  right: 14px !important;
+  font-size: 1.15rem !important;
+  pointer-events: none !important;
+  transition: transform 0.2s ease !important;
+}
+
+.custom-date-trigger:hover ~ .custom-date-icon {
+  transform: scale(1.15) rotate(-5deg) !important;
+}
+
+/* Calendar Popover */
+.celebration-cal-popover {
+  position: absolute !important;
+  top: calc(100% + 8px) !important;
+  left: 0 !important;
+  width: 290px !important;
+  background: #FFFFFF !important;
+  border: 1.5px solid rgba(245, 158, 11, 0.45) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.22) !important;
+  padding: 16px 14px 14px !important;
+  z-index: 10000 !important;
+  animation: popInCal 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  user-select: none !important;
+}
+
+[data-theme="dark"] .celebration-cal-popover {
+  background: #1E293B !important;
+  border-color: rgba(245, 158, 11, 0.5) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6) !important;
+}
+
+@keyframes popInCal {
+  from { opacity: 0; transform: scale(0.92) translateY(-8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.cal-pop-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 14px !important;
+  gap: 8px !important;
+}
+
+.cal-pop-selectors {
+  display: flex !important;
+  gap: 8px !important;
+  align-items: center !important;
+  flex: 1 !important;
+  justify-content: center !important;
+}
+
+.cal-select {
+  background: #FFF7ED !important;
+  border: 1.5px solid #FDBA74 !important;
+  border-radius: 10px !important;
+  font-family: var(--font) !important;
+  font-weight: 800 !important;
+  font-size: 0.86rem !important;
+  color: #C2410C !important;
+  padding: 6px 10px !important;
+  cursor: pointer !important;
+  outline: none !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 1px 3px rgba(234, 88, 12, 0.08) !important;
+}
+
+.cal-select:hover {
+  background: #FFEDD5 !important;
+  border-color: #EA580C !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 3px 8px rgba(234, 88, 12, 0.15) !important;
+}
+
+.cal-select:focus {
+  border-color: #EA580C !important;
+  background: #FFFFFF !important;
+  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.2) !important;
+}
+
+[data-theme="dark"] .cal-select {
+  background: rgba(245, 158, 11, 0.12) !important;
+  border-color: rgba(245, 158, 11, 0.35) !important;
+  color: #FDBA74 !important;
+}
+
+[data-theme="dark"] .cal-select:hover {
+  background: rgba(245, 158, 11, 0.22) !important;
+  border-color: #F59E0B !important;
+}
+
+[data-theme="dark"] .cal-select:focus {
+  background: #1E293B !important;
+  border-color: #F59E0B !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3) !important;
+}
+
+.cal-select option {
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+  font-weight: 600 !important;
+  padding: 6px 10px !important;
+}
+
+[data-theme="dark"] .cal-select option {
+  background: #1E293B !important;
+  color: #F8FAFC !important;
+}
+
+.cal-select-month {
+  flex: 1.25 !important;
+}
+
+.cal-select-year {
+  flex: 1 !important;
+}
+
+.cal-pop-title {
+  font-size: 0.98rem !important;
+  font-weight: 800 !important;
+  color: var(--dark) !important;
+  letter-spacing: 0.2px !important;
+}
+
+.cal-pop-nav-btn {
+  background: #FFF7ED !important;
+  border: 1.5px solid #FDBA74 !important;
+  color: #C2410C !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.15rem !important;
+  font-weight: 800 !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 1px 3px rgba(234, 88, 12, 0.08) !important;
+}
+
+.cal-pop-nav-btn:hover {
+  background: #EA580C !important;
+  border-color: #EA580C !important;
+  color: #FFFFFF !important;
+  transform: scale(1.12) !important;
+  box-shadow: 0 4px 10px rgba(234, 88, 12, 0.3) !important;
+}
+
+[data-theme="dark"] .cal-pop-nav-btn {
+  background: rgba(245, 158, 11, 0.15) !important;
+  border-color: rgba(245, 158, 11, 0.4) !important;
+  color: #FDBA74 !important;
+}
+
+[data-theme="dark"] .cal-pop-nav-btn:hover {
+  background: #F59E0B !important;
+  border-color: #F59E0B !important;
+  color: #0F172A !important;
+}
+
+.cal-pop-weekdays {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  text-align: center !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  color: var(--gray) !important;
+  margin-bottom: 6px !important;
+  text-transform: uppercase !important;
+}
+
+.cal-pop-days-grid {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  gap: 3px !important;
+}
+
+.cal-day-cell {
+  height: 34px !important;
+  width: 34px !important;
+  margin: 0 auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  color: var(--dark) !important;
+  cursor: pointer !important;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  position: relative !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+.cal-day-cell:hover:not(.disabled) {
+  background: #FEF3C7 !important;
+  color: #B45309 !important;
+  transform: scale(1.15) !important;
+}
+
+[data-theme="dark"] .cal-day-cell:hover:not(.disabled) {
+  background: rgba(245, 158, 11, 0.25) !important;
+  color: #FCD34D !important;
+}
+
+.cal-day-cell.selected {
+  background: linear-gradient(135deg, #EA580C, #F59E0B) !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.4) !important;
+  transform: scale(1.1) !important;
+}
+
+.cal-day-cell.is-today::after {
+  content: '' !important;
+  position: absolute !important;
+  bottom: 3px !important;
+  width: 4px !important;
+  height: 4px !important;
+  border-radius: 50% !important;
+  background: #EA580C !important;
+}
+
+.cal-day-cell.selected.is-today::after {
+  background: #FFFFFF !important;
+}
+
+.cal-day-cell.empty {
+  cursor: default !important;
+  pointer-events: none !important;
+}
+
+.cal-pop-footer {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-top: 10px !important;
+  padding-top: 8px !important;
+  border-top: 1px solid var(--border-color) !important;
+}
+
+.cal-pop-quick-btn {
+  background: none !important;
+  border: none !important;
+  color: #EA580C !important;
+  font-size: 0.8rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  padding: 4px 8px !important;
+  border-radius: 6px !important;
+  transition: all 0.15s !important;
+}
+
+.cal-pop-quick-btn:hover {
+  background: rgba(234, 88, 12, 0.1) !important;
+}
+
+.cal-pop-done-btn {
+  background: var(--light) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--dark) !important;
+  font-size: 0.8rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  padding: 4px 12px !important;
+  border-radius: 6px !important;
+  transition: all 0.15s !important;
+}
+
+.cal-pop-done-btn:hover {
+  background: var(--border-color) !important;
 }
 
 input:focus, select:focus, textarea:focus {
   border-color: var(--primary);
   background: var(--card-bg);
-  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.15);
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.18);
 }
 
 .field-hint {
@@ -1458,4 +1773,163 @@ input:focus, select:focus, textarea:focus {
   .top-bar { padding: 16px; }
   .content-section { padding: 16px; }
   .stats-grid { grid-template-columns: 1fr; }
+}
+
+/* ==========================================================================
+   UNIVERSAL 3D ANIMATED CENTERED NOTIFICATION & CONFIRMATION MODALS
+   ========================================================================== */
+.zen-3d-toast-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(10, 15, 30, 0.72) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  z-index: 200000 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.zen-3d-toast-overlay.active {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.zen-3d-toast-card {
+  background: #FFFFFF !important;
+  border: 1.5px solid rgba(245, 158, 11, 0.45) !important;
+  border-radius: 28px !important;
+  width: 100% !important;
+  max-width: 440px !important;
+  padding: 36px 28px 30px !important;
+  text-align: center !important;
+  box-shadow: 0 35px 90px rgba(0, 0, 0, 0.45) !important;
+  transform: scale(0.85) translateY(30px) !important;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+[data-theme="dark"] .zen-3d-toast-card {
+  background: #1E293B !important;
+  border-color: rgba(245, 158, 11, 0.5) !important;
+}
+
+.zen-3d-toast-overlay.active .zen-3d-toast-card {
+  transform: scale(1) translateY(0) !important;
+}
+
+.zen-3d-toast-icon-wrapper {
+  position: relative !important;
+  width: 80px !important;
+  height: 80px !important;
+  margin: 0 auto 18px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.zen-3d-toast-pulse-ring {
+  position: absolute !important;
+  inset: -6px !important;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg, rgba(234, 88, 12, 0.25), rgba(245, 158, 11, 0.25)) !important;
+  animation: pulseRing 2s infinite ease-in-out !important;
+}
+
+@keyframes pulseRing {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 0.3; }
+  100% { transform: scale(0.9); opacity: 0.8; }
+}
+
+.zen-3d-toast-icon {
+  width: 72px !important;
+  height: 72px !important;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg, #EA580C, #F59E0B) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 2.2rem !important;
+  box-shadow: 0 12px 28px rgba(234, 88, 12, 0.35) !important;
+  animation: float3DIcon 2.5s ease-in-out infinite !important;
+}
+
+@keyframes float3DIcon {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-6px) rotate(4deg); }
+}
+
+.zen-3d-toast-title {
+  font-size: 1.5rem !important;
+  font-weight: 800 !important;
+  color: var(--dark) !important;
+  margin: 0 0 8px !important;
+  font-family: var(--font-serif) !important;
+}
+
+.zen-3d-toast-message {
+  font-size: 0.95rem !important;
+  color: var(--gray) !important;
+  line-height: 1.6 !important;
+  margin: 0 0 22px !important;
+  padding: 0 10px !important;
+}
+
+.zen-3d-toast-btn {
+  background: linear-gradient(135deg, #EA580C, #F59E0B) !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  border-radius: 12px !important;
+  padding: 12px 32px !important;
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 6px 18px rgba(234, 88, 12, 0.3) !important;
+}
+
+.zen-3d-toast-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 24px rgba(234, 88, 12, 0.45) !important;
+}
+
+.zen-3d-cancel-btn {
+  background: var(--light) !important;
+  color: var(--dark) !important;
+  border: 1.5px solid var(--border-color) !important;
+  border-radius: 12px !important;
+  padding: 11px 24px !important;
+  font-size: 0.92rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.zen-3d-cancel-btn:hover {
+  background: var(--border-color) !important;
+  transform: translateY(-1px) !important;
+}
+
+.zen-3d-confirm-btn {
+  background: linear-gradient(135deg, #EF4444, #DC2626) !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  border-radius: 12px !important;
+  padding: 11px 24px !important;
+  font-size: 0.92rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35) !important;
+}
+
+.zen-3d-confirm-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5) !important;
 }

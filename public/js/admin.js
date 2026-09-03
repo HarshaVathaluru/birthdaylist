@@ -420,6 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <td>
           <div class="celebrant-name-box">
             <span class="celebrant-name">${escapeHtml(bday.name)}</span>
+            ${bday.email ? `<span style="font-size: 0.78rem; color: #EA580C; font-weight: 600; display: block; margin-top: 2px;">✉️ ${escapeHtml(bday.email)}</span>` : ''}
             ${bday.notes ? `<span class="celebrant-notes">${escapeHtml(bday.notes)}</span>` : ''}
           </div>
         </td>
@@ -428,13 +429,10 @@ document.addEventListener('DOMContentLoaded', () => {
         <td>${statusBadge}</td>
         <td>
           <div class="table-actions">
-            <button type="button" class="btn-action-icon btn-send-test-mail" title="Trigger Instant Celebration Email to Circle Directory" data-id="${bday.id}">
-              💌
-            </button>
-            <button type="button" class="btn-action-icon btn-edit" title="Edit Birthday" data-id="${bday.id}">
+            <button type="button" class="btn-action-icon btn-edit" title="Edit Celebrant" data-id="${bday.id}">
               ✏️
             </button>
-            <button type="button" class="btn-action-icon btn-delete" title="Delete Birthday" data-id="${bday.id}">
+            <button type="button" class="btn-action-icon btn-delete" title="Delete Celebrant" data-id="${bday.id}">
               🗑️
             </button>
           </div>
@@ -442,7 +440,6 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
 
       // Event Listeners
-      tr.querySelector('.btn-send-test-mail').addEventListener('click', () => sendInstantEmail(bday));
       tr.querySelector('.btn-edit').addEventListener('click', () => openBirthdayModal(bday));
       tr.querySelector('.btn-delete').addEventListener('click', () => deleteBirthday(bday.id));
 
@@ -451,44 +448,57 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Instant email trigger
-  async function sendInstantEmail(bday) {
-    if (!confirm(`Dispatch automated celebration email for ${bday.name} to the entire Circle Directory now?`)) return;
-
-    try {
-      const res = await fetch(`/api/birthdays/${bday.id}/send-email`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({})
-      });
-      const data = await res.json();
-      if (res.ok) {
-        showToast(data.message || 'Celebration email dispatched to circle!', 'success');
-      } else {
-        showToast(data.error || 'Failed to dispatch email.', 'error');
+  function sendInstantEmail(bday) {
+    window.showZenitudeConfirm({
+      title: 'Dispatch Email?',
+      message: `Dispatch automated celebration email for ${bday.name} to the entire Circle Directory now?`,
+      icon: '📨',
+      confirmText: 'Dispatch Email',
+      confirmColor: 'linear-gradient(135deg, #EA580C, #F59E0B)',
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/birthdays/${bday.id}/send-email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+          });
+          const data = await res.json();
+          if (res.ok) {
+            showToast(data.message || 'Celebration email dispatched to circle!', 'success');
+          } else {
+            showToast(data.error || 'Failed to dispatch email.', 'error');
+          }
+        } catch (err) {
+          showToast('Error connecting to email service.', 'error');
+        }
       }
-    } catch (err) {
-      showToast('Error connecting to email service.', 'error');
-    }
+    });
   }
 
   // Delete Birthday
-  async function deleteBirthday(id) {
-    if (!confirm('Are you sure you want to delete this celebrant?')) return;
-
-    try {
-      const res = await fetch(`/api/birthdays/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        showToast('Birthday deleted.', 'success');
-        fetchBirthdays();
-      } else {
-        showToast('Failed to delete birthday.', 'error');
+  function deleteBirthday(id) {
+    window.showZenitudeConfirm({
+      title: 'Delete Celebrant?',
+      message: 'Are you sure you want to delete this celebrant from the workspace?',
+      icon: '🗑️',
+      confirmText: 'Delete Celebrant',
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/birthdays/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            showToast('Birthday deleted.', 'success');
+            fetchBirthdays();
+          } else {
+            showToast('Failed to delete birthday.', 'error');
+          }
+        } catch (err) {
+          showToast('Network error.', 'error');
+        }
       }
-    } catch (err) {
-      showToast('Network error.', 'error');
-    }
+    });
   }
 
   // Add / Edit Birthday Modal (Clean & Simple)
@@ -497,21 +507,230 @@ document.addEventListener('DOMContentLoaded', () => {
   if (birthdayModalClose) birthdayModalClose.addEventListener('click', closeBirthdayModal);
   if (modalCancelBtn) modalCancelBtn.addEventListener('click', closeBirthdayModal);
 
+  // ============================================================================
+  // CUSTOM CELEBRATION CALENDAR PICKER ENGINE (Month & Year Enabled)
+  // ============================================================================
+  const MONTH_NAMES = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  let calCurrentMonth = new Date().getMonth();
+  let calCurrentYear = new Date().getFullYear();
+  let calSelectedYear = calCurrentYear;
+  let calSelectedMonth = calCurrentMonth;
+  let calSelectedDay = new Date().getDate();
+
+  const calTrigger = document.getElementById('date_display');
+  const calHiddenInput = document.getElementById('date');
+  const calPopover = document.getElementById('celebration-cal-popover');
+  const calMonthSelect = document.getElementById('cal-month-select');
+  const calYearSelect = document.getElementById('cal-year-select');
+  const calDaysGrid = document.getElementById('cal-days-grid');
+  const calPrevBtn = document.getElementById('cal-prev-btn');
+  const calNextBtn = document.getElementById('cal-next-btn');
+  const calTodayBtn = document.getElementById('cal-today-btn');
+  const calDoneBtn = document.getElementById('cal-done-btn');
+
+  function populateYearSelect() {
+    if (!calYearSelect) return;
+    calYearSelect.innerHTML = '';
+    const nowY = new Date().getFullYear();
+    for (let y = nowY + 5; y >= 1950; y--) {
+      const opt = document.createElement('option');
+      opt.value = y;
+      opt.textContent = y;
+      if (y === calCurrentYear) opt.selected = true;
+      calYearSelect.appendChild(opt);
+    }
+  }
+  populateYearSelect();
+
+  function setDateSelection(y, m, d) {
+    calCurrentYear = y;
+    calSelectedYear = y;
+    calSelectedMonth = m;
+    calSelectedDay = d;
+    const mm = String(m + 1).padStart(2, '0');
+    const dd = String(d).padStart(2, '0');
+    if (calHiddenInput) calHiddenInput.value = `${y}-${mm}-${dd}`;
+    if (calTrigger) calTrigger.value = `${MONTH_NAMES[m]} ${d}, ${y}`;
+  }
+
+  function renderCelebrationCalendar() {
+    if (!calDaysGrid) return;
+
+    if (calMonthSelect) calMonthSelect.value = calCurrentMonth;
+    if (calYearSelect) calYearSelect.value = calCurrentYear;
+
+    calDaysGrid.innerHTML = '';
+
+    const firstDayIndex = new Date(calCurrentYear, calCurrentMonth, 1).getDay();
+    const daysInMonth = new Date(calCurrentYear, calCurrentMonth + 1, 0).getDate();
+    const today = new Date();
+
+    // Empty lead cells
+    for (let i = 0; i < firstDayIndex; i++) {
+      const emptyCell = document.createElement('div');
+      emptyCell.className = 'cal-day-cell empty';
+      calDaysGrid.appendChild(emptyCell);
+    }
+
+    // Days in current month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dayCell = document.createElement('button');
+      dayCell.type = 'button';
+      dayCell.className = 'cal-day-cell';
+      dayCell.textContent = day;
+
+      const isSelected = (calCurrentYear === calSelectedYear && calCurrentMonth === calSelectedMonth && day === calSelectedDay);
+      const isToday = (today.getFullYear() === calCurrentYear && today.getMonth() === calCurrentMonth && today.getDate() === day);
+
+      if (isSelected) dayCell.classList.add('selected');
+      if (isToday) dayCell.classList.add('is-today');
+
+      dayCell.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setDateSelection(calCurrentYear, calCurrentMonth, day);
+        renderCelebrationCalendar();
+        if (typeof confetti === 'function') {
+          confetti({ particleCount: 20, spread: 50, origin: { y: 0.6 } });
+        }
+        setTimeout(closeCalendarPopover, 160);
+      });
+
+      calDaysGrid.appendChild(dayCell);
+    }
+  }
+
+  function openCalendarPopover() {
+    if (!calPopover) return;
+    calCurrentMonth = calSelectedMonth;
+    calCurrentYear = calSelectedYear;
+    renderCelebrationCalendar();
+    calPopover.classList.remove('hidden');
+    if (calTrigger) calTrigger.classList.add('active');
+  }
+
+  function closeCalendarPopover() {
+    if (!calPopover) return;
+    calPopover.classList.add('hidden');
+    if (calTrigger) calTrigger.classList.remove('active');
+  }
+
+  if (calTrigger) {
+    calTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (calPopover && calPopover.classList.contains('hidden')) {
+        openCalendarPopover();
+      } else {
+        closeCalendarPopover();
+      }
+    });
+  }
+
+  if (calMonthSelect) {
+    calMonthSelect.addEventListener('change', (e) => {
+      e.stopPropagation();
+      calCurrentMonth = parseInt(calMonthSelect.value, 10);
+      renderCelebrationCalendar();
+    });
+  }
+
+  if (calYearSelect) {
+    calYearSelect.addEventListener('change', (e) => {
+      e.stopPropagation();
+      calCurrentYear = parseInt(calYearSelect.value, 10);
+      renderCelebrationCalendar();
+    });
+  }
+
+  if (calPrevBtn) {
+    calPrevBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (calCurrentMonth === 0) {
+        calCurrentMonth = 11;
+        calCurrentYear--;
+      } else {
+        calCurrentMonth--;
+      }
+      renderCelebrationCalendar();
+    });
+  }
+
+  if (calNextBtn) {
+    calNextBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (calCurrentMonth === 11) {
+        calCurrentMonth = 0;
+        calCurrentYear++;
+      } else {
+        calCurrentMonth++;
+      }
+      renderCelebrationCalendar();
+    });
+  }
+
+  if (calTodayBtn) {
+    calTodayBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const t = new Date();
+      setDateSelection(t.getFullYear(), t.getMonth(), t.getDate());
+      renderCelebrationCalendar();
+      closeCalendarPopover();
+    });
+  }
+
+  if (calDoneBtn) {
+    calDoneBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeCalendarPopover();
+    });
+  }
+
+  // Click outside to close calendar
+  document.addEventListener('click', (e) => {
+    if (calPopover && !calPopover.classList.contains('hidden')) {
+      if (!calPopover.contains(e.target) && e.target !== calTrigger) {
+        closeCalendarPopover();
+      }
+    }
+  });
+
   function openBirthdayModal(bday = null) {
     birthdayForm.reset();
     photoPreview.innerHTML = '<span>📷</span>';
     removePhotoBtn.classList.add('hidden');
+    closeCalendarPopover();
 
     if (bday) {
       modalTitle.textContent = 'Edit Celebrant';
       birthdayIdInput.value = bday.id;
-      document.getElementById('name').value = bday.name;
+      document.getElementById('name').value = bday.name || '';
+      document.getElementById('email').value = bday.email || '';
       
-      const currentYear = new Date().getFullYear();
-      if (bday.date && bday.date.length === 5) {
-        document.getElementById('date').value = `${currentYear}-${bday.date}`;
+      // Parse date with year if present
+      if (bday.date) {
+        const parts = bday.date.split(/[-/.]/).map(Number);
+        let y = new Date().getFullYear(), m = 0, d = 1;
+        if (parts.length === 3) {
+          if (parts[0] > 1000) {
+            y = parts[0];
+            m = parts[1] - 1;
+            d = parts[2];
+          } else if (parts[2] > 1000) {
+            y = parts[2];
+            m = parts[0] - 1;
+            d = parts[1];
+          }
+        } else if (parts.length === 2) {
+          m = parts[0] - 1;
+          d = parts[1];
+        }
+        setDateSelection(y, m, d);
       } else {
-        document.getElementById('date').value = bday.date || '';
+        const t = new Date();
+        setDateSelection(t.getFullYear(), t.getMonth(), t.getDate());
       }
       
       document.getElementById('remind_days_before').value = bday.remind_days_before || 2;
@@ -525,11 +744,9 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       modalTitle.textContent = 'Add Celebrant';
       birthdayIdInput.value = '';
+      document.getElementById('email').value = '';
       const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      document.getElementById('date').value = `${yyyy}-${mm}-${dd}`;
+      setDateSelection(today.getFullYear(), today.getMonth(), today.getDate());
       document.getElementById('remind_days_before').value = 2;
       document.getElementById('is_active').checked = true;
     }
@@ -538,6 +755,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function closeBirthdayModal() {
+    closeCalendarPopover();
     birthdayModal.classList.add('hidden');
   }
 
@@ -599,6 +817,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const formData = new FormData();
     formData.append('name', document.getElementById('name').value.trim());
+    formData.append('email', document.getElementById('email').value.trim());
     formData.append('date', normalizedDate);
     formData.append('remind_days_before', document.getElementById('remind_days_before').value);
     formData.append('notes', document.getElementById('notes').value.trim());
@@ -677,20 +896,27 @@ document.addEventListener('DOMContentLoaded', () => {
         </td>
       `;
 
-      tr.querySelector('.btn-delete').addEventListener('click', async () => {
-        if (!confirm(`Remove ${member.name || member.email} from circle auto-trigger list?`)) return;
-        try {
-          const res = await fetch(`/api/circle-members/${member.id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          if (res.ok) {
-            showToast('Member removed from directory.', 'success');
-            fetchCircleMembers();
+      tr.querySelector('.btn-delete').addEventListener('click', () => {
+        window.showZenitudeConfirm({
+          title: 'Remove Member?',
+          message: `Remove ${member.name || member.email} from circle auto-trigger list?`,
+          icon: '🗑️',
+          confirmText: 'Remove Member',
+          onConfirm: async () => {
+            try {
+              const res = await fetch(`/api/circle-members/${member.id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+              });
+              if (res.ok) {
+                showToast('Member removed from directory.', 'success');
+                fetchCircleMembers();
+              }
+            } catch (e) {
+              showToast('Error removing member.', 'error');
+            }
           }
-        } catch (e) {
-          showToast('Error removing member.', 'error');
-        }
+        });
       });
 
       circleTableBody.appendChild(tr);
@@ -763,9 +989,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ===== CSV EXPORT & IMPORT =====
   if (exportCsvBtn) {
-    exportCsvBtn.addEventListener('click', () => {
-      window.location.href = `/api/birthdays/export/csv`;
-      showToast('Exporting CSV backup...', 'info');
+    exportCsvBtn.addEventListener('click', async () => {
+      try {
+        showToast('Generating CSV export...', 'info');
+        const res = await fetch('/api/birthdays/export/csv', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) {
+          showToast('Failed to export CSV.', 'error');
+          return;
+        }
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const dateStr = new Date().toISOString().slice(0, 10);
+        a.download = `Zenitude_Birthdays_${dateStr}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        showToast('CSV Export downloaded successfully!', 'success');
+      } catch (err) {
+        showToast('Error downloading CSV export.', 'error');
+      }
     });
   }
 
@@ -902,17 +1149,24 @@ document.addEventListener('DOMContentLoaded', () => {
         </td>
       `;
 
-      tr.querySelector('.btn-delete').addEventListener('click', async () => {
-        if (!confirm('Delete this message from circle chat?')) return;
-        try {
-          const r = await fetch(`/api/messages/${msg.id}`, { method: 'DELETE' });
-          if (r.ok) {
-            showToast('Message deleted.', 'success');
-            fetchCircleMessages();
+      tr.querySelector('.btn-delete').addEventListener('click', () => {
+        window.showZenitudeConfirm({
+          title: 'Delete Message?',
+          message: 'Delete this message from circle chat feed?',
+          icon: '🗑️',
+          confirmText: 'Delete Message',
+          onConfirm: async () => {
+            try {
+              const r = await fetch(`/api/messages/${msg.id}`, { method: 'DELETE' });
+              if (r.ok) {
+                showToast('Message deleted.', 'success');
+                fetchCircleMessages();
+              }
+            } catch (e) {
+              showToast('Error deleting message.', 'error');
+            }
           }
-        } catch (e) {
-          showToast('Error deleting message.', 'error');
-        }
+        });
       });
 
       messagesTableBody.appendChild(tr);
@@ -920,18 +1174,25 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (clearAllMessagesBtn) {
-    clearAllMessagesBtn.addEventListener('click', async () => {
-      if (!confirm('Are you sure you want to delete ALL active circle chat messages? This cannot be undone.')) return;
-      try {
-        const res = await fetch('/api/messages', { method: 'DELETE' });
-        const data = await res.json();
-        if (res.ok) {
-          showToast(data.message || 'All messages cleared.', 'success');
-          fetchCircleMessages();
+    clearAllMessagesBtn.addEventListener('click', () => {
+      window.showZenitudeConfirm({
+        title: 'Clear All Messages?',
+        message: 'Are you sure you want to delete ALL active circle chat messages? This cannot be undone.',
+        icon: '🧹',
+        confirmText: 'Clear All Notes',
+        onConfirm: async () => {
+          try {
+            const res = await fetch('/api/messages', { method: 'DELETE' });
+            const data = await res.json();
+            if (res.ok) {
+              showToast(data.message || 'All messages cleared.', 'success');
+              fetchCircleMessages();
+            }
+          } catch (e) {
+            showToast('Error clearing messages.', 'error');
+          }
         }
-      } catch (e) {
-        showToast('Error clearing messages.', 'error');
-      }
+      });
     });
   }
 
@@ -984,19 +1245,26 @@ document.addEventListener('DOMContentLoaded', () => {
         </td>
       `;
 
-      tr.querySelector('.btn-delete').addEventListener('click', async () => {
-        if (!confirm(`Are you sure you want to delete memory "${m.title}"?`)) return;
-        try {
-          const r = await fetch(`/api/memories/${m.id}`, { method: 'DELETE' });
-          if (r.ok) {
-            showToast('Memory deleted successfully.', 'success');
-            fetchMemoriesList();
-          } else {
-            showToast('Failed to delete memory.', 'error');
+      tr.querySelector('.btn-delete').addEventListener('click', () => {
+        window.showZenitudeConfirm({
+          title: 'Delete Memory?',
+          message: `Are you sure you want to delete memory "${m.title}"?`,
+          icon: '🗑️',
+          confirmText: 'Delete Memory',
+          onConfirm: async () => {
+            try {
+              const r = await fetch(`/api/memories/${m.id}`, { method: 'DELETE' });
+              if (r.ok) {
+                showToast('Memory deleted successfully.', 'success');
+                fetchMemoriesList();
+              } else {
+                showToast('Failed to delete memory.', 'error');
+              }
+            } catch (e) {
+              showToast('Network error deleting memory.', 'error');
+            }
           }
-        } catch (e) {
-          showToast('Network error deleting memory.', 'error');
-        }
+        });
       });
 
       memoriesTableBody.appendChild(tr);
@@ -1008,29 +1276,35 @@ document.addEventListener('DOMContentLoaded', () => {
   const executePurgeMemoriesBtn = document.getElementById('execute-purge-memories-btn');
 
   if (executePurgeMemoriesBtn && purgeMemoriesSelect) {
-    executePurgeMemoriesBtn.addEventListener('click', async () => {
+    executePurgeMemoriesBtn.addEventListener('click', () => {
       const selectedVal = purgeMemoriesSelect.value;
       const isAll = selectedVal === 'all';
       const promptMsg = isAll 
         ? 'Are you sure you want to permanently delete ALL memories from the workspace? This cannot be undone.' 
         : `Are you sure you want to permanently delete all memories older than ${selectedVal} days?`;
 
-      if (!confirm(promptMsg)) return;
+      window.showZenitudeConfirm({
+        title: 'Purge Memories?',
+        message: promptMsg,
+        icon: '🧹',
+        confirmText: 'Purge Memories',
+        onConfirm: async () => {
+          try {
+            const endpoint = isAll ? '/api/memories/purge/all' : `/api/memories/purge/older-than?days=${selectedVal}`;
+            const res = await fetch(endpoint, { method: 'DELETE' });
+            const data = await res.json();
 
-      try {
-        const endpoint = isAll ? '/api/memories/purge/all' : `/api/memories/purge/older-than?days=${selectedVal}`;
-        const res = await fetch(endpoint, { method: 'DELETE' });
-        const data = await res.json();
-
-        if (res.ok) {
-          showToast(data.message || 'Old memories purged successfully.', 'success');
-          fetchMemoriesList();
-        } else {
-          showToast(data.error || 'Failed to purge memories.', 'error');
+            if (res.ok) {
+              showToast(data.message || 'Old memories purged successfully.', 'success');
+              fetchMemoriesList();
+            } else {
+              showToast(data.error || 'Failed to purge memories.', 'error');
+            }
+          } catch (err) {
+            showToast('Network error purging memories.', 'error');
+          }
         }
-      } catch (err) {
-        showToast('Network error purging memories.', 'error');
-      }
+      });
     });
   }
 
@@ -1132,6 +1406,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function showToast(message, type = 'info') {
+    if (window.showZenitudeNotification) {
+      const isSuccess = type === 'success';
+      const isError = type === 'error';
+      window.showZenitudeNotification({
+        title: isSuccess ? 'Success!' : (isError ? 'Notice' : 'Admin Update'),
+        message: message,
+        icon: isSuccess ? '✨' : (isError ? '⚠️' : '🔔'),
+        type: isSuccess ? 'success' : (isError ? 'warning' : 'info')
+      });
+      return;
+    }
+
     let container = document.getElementById('toast-container');
     if (!container) {
       container = document.createElement('div');

@@ -25,6 +25,7 @@ const { router: messagesRoutes, purgeOldMessages } = require('./routes/messages'
 
 const circleMembersRoutes = require('./routes/circleMembers');
 const memoriesRoutes = require('./routes/memories');
+const aiRoutes = require('./routes/ai');
 
 // HTML Routes
 app.get(['/intent', '/our-intent', '/intent.html'], (req, res) => {
@@ -55,6 +56,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/messages', messagesRoutes);
 app.use('/api/circle-members', circleMembersRoutes);
 app.use('/api/memories', memoriesRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Start Cron Job & 3-Day Message Auto-Clear Policy
 emailService.startCronJob();

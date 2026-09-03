@@ -285,11 +285,11 @@
               <div class="form-grid">
                 <div class="input-group">
                   <label for="member_name">Member Name</label>
-                  <input type="text" id="member_name" name="name" placeholder="e.g. Maya Patel">
+                  <input type="text" id="member_name" name="name" placeholder="Enter member name">
                 </div>
                 <div class="input-group">
                   <label for="member_email">Email Address *</label>
-                  <input type="email" id="member_email" name="email" placeholder="maya@example.com" required>
+                  <input type="email" id="member_email" name="email" placeholder="member@company.com" required>
                 </div>
               </div>
               <button type="submit" class="btn-primary" style="margin-top: 16px;">
@@ -299,8 +299,8 @@
 
             <div class="quick-paste-box" style="margin-top: 20px;">
               <label for="member_raw_text" style="font-size: 0.8rem; font-weight: 700; color: var(--dark-soft);">Or Quick-Paste Member Directory:</label>
-              <span class="field-hint" style="margin-bottom: 6px; display: block;">Format: <code>Maya Patel, maya@example.com</code> or <code>email@domain.com</code> (one per line)</span>
-              <textarea id="member_raw_text" rows="3" placeholder="Maya Patel, maya@example.com&#10;Karan Mehta, karan@company.com&#10;Rohan Verma, rohan@domain.com"></textarea>
+              <span class="field-hint" style="margin-bottom: 6px; display: block;">Format: <code>Full Name, email@domain.com</code> (one per line)</span>
+              <textarea id="member_raw_text" rows="3" placeholder="Full Name, email@company.com&#10;Full Name, email@company.com"></textarea>
               <button type="button" class="btn-secondary" id="save-batch-members-btn" style="margin-top: 10px;">
                 <span>📋 Ingest Member List</span>
               </button>
@@ -549,12 +549,54 @@
 
           <div class="input-group full-width">
             <label for="name">Celebrant Full Name *</label>
-            <input type="text" id="name" name="name" required placeholder="e.g. Aarav Sharma">
+            <input type="text" id="name" name="name" required placeholder="Enter celebrant's full name">
           </div>
 
-          <div class="input-group">
-            <label for="date">Birthday Date *</label>
-            <input type="date" id="date" name="date" required>
+          <div class="input-group full-width">
+            <label for="email">Celebrant Email Address (For Direct VIP Wish)</label>
+            <input type="email" id="email" name="email" placeholder="celebrant@company.com">
+          </div>
+
+          <div class="input-group custom-date-picker-group">
+            <label for="date_display">Birthday Date *</label>
+            <div class="custom-date-trigger-wrap">
+              <input type="text" id="date_display" readonly placeholder="Select celebration date..." class="custom-date-trigger" required>
+              <span class="custom-date-icon">🗓️</span>
+              <input type="hidden" id="date" name="date" required>
+            </div>
+            
+            <!-- Custom Animated Celebration Calendar Popover -->
+            <div id="celebration-cal-popover" class="celebration-cal-popover hidden">
+              <div class="cal-pop-header">
+                <button type="button" class="cal-pop-nav-btn" id="cal-prev-btn" title="Previous Month">‹</button>
+                <div class="cal-pop-selectors">
+                  <select id="cal-month-select" class="cal-select cal-select-month">
+                    <option value="0">January</option>
+                    <option value="1">February</option>
+                    <option value="2">March</option>
+                    <option value="3">April</option>
+                    <option value="4">May</option>
+                    <option value="5">June</option>
+                    <option value="6">July</option>
+                    <option value="7">August</option>
+                    <option value="8">September</option>
+                    <option value="9">October</option>
+                    <option value="10">November</option>
+                    <option value="11">December</option>
+                  </select>
+                  <select id="cal-year-select" class="cal-select cal-select-year"></select>
+                </div>
+                <button type="button" class="cal-pop-nav-btn" id="cal-next-btn" title="Next Month">›</button>
+              </div>
+              <div class="cal-pop-weekdays">
+                <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+              </div>
+              <div class="cal-pop-days-grid" id="cal-days-grid"></div>
+              <div class="cal-pop-footer">
+                <button type="button" class="cal-pop-quick-btn" id="cal-today-btn">✨ Today</button>
+                <button type="button" class="cal-pop-done-btn" id="cal-done-btn">Done</button>
+              </div>
+            </div>
           </div>
 
           <div class="input-group">
@@ -604,7 +646,7 @@
 
         <div class="input-group full-width" style="margin-top: 14px;">
           <label for="import-text">Or Paste CSV Data Directly:</label>
-          <textarea id="import-text" rows="5" placeholder="Maya Patel, 09-24, Loves art&#10;Karan Mehta, 11-05, Photographer"></textarea>
+          <textarea id="import-text" rows="5" placeholder="Celebrant Name, 09-24, Celebration Notes&#10;Celebrant Name, 11-05, Celebration Notes"></textarea>
         </div>
       </div>
 
@@ -616,6 +658,9 @@
   </div>
 
   <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="/js/workspace-3d.js"></script>
   <script src="/js/admin.js"></script>
 </body>
 </html>

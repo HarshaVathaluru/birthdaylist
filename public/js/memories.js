@@ -79,22 +79,50 @@
     // Admin Delete handler on card
     const deleteBtn = card.querySelector('.btn-delete-memory-card');
     if (deleteBtn) {
-      deleteBtn.addEventListener('click', async (e) => {
+      deleteBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (!confirm(`Admin: Delete memory "${m.title}"?`)) return;
-        try {
-          const res = await fetch(`/api/memories/${m.id}`, { method: 'DELETE' });
-          if (res.ok) {
-            card.style.transition = 'all 0.3s ease';
-            card.style.opacity = '0';
-            card.style.transform = 'scale(0.8)';
-            setTimeout(() => card.remove(), 300);
-          } else {
-            alert('Failed to delete memory.');
+        window.showZenitudeConfirm({
+          title: 'Delete Memory?',
+          message: `Admin: Are you sure you want to permanently delete memory "${m.title}"?`,
+          icon: '🗑️',
+          confirmText: 'Delete Memory',
+          onConfirm: async () => {
+            try {
+              const res = await fetch(`/api/memories/${m.id}`, { method: 'DELETE' });
+              if (res.ok) {
+                card.style.transition = 'all 0.3s ease';
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.8)';
+                setTimeout(() => card.remove(), 300);
+                if (window.showZenitudeNotification) {
+                  window.showZenitudeNotification({
+                    title: 'Memory Deleted',
+                    message: `"${m.title}" has been removed from the memories wall.`,
+                    icon: '🗑️',
+                    type: 'info'
+                  });
+                }
+              } else {
+                if (window.showZenitudeNotification) {
+                  window.showZenitudeNotification({
+                    title: 'Deletion Failed',
+                    message: 'Unable to delete memory record.',
+                    icon: '⚠️',
+                    type: 'warning'
+                  });
+                }
+              }
+            } catch (err) {
+              if (window.showZenitudeNotification) {
+                window.showZenitudeNotification({
+                  title: 'Network Error',
+                  message: 'Could not reach server to delete memory.',
+                  icon: '⚠️',
+                  type: 'warning'
+                });
+              }
           }
-        } catch (err) {
-          alert('Network error deleting memory.');
-        }
+        });
       });
     }
 
@@ -215,7 +243,14 @@
   // Process & Downscale image for quick loading
   function processFile(file) {
     if (!file.type.startsWith('image/')) {
-      alert('Please select a valid image file (PNG, JPG, JPEG, WEBP).');
+      if (window.showZenitudeNotification) {
+        window.showZenitudeNotification({
+          title: 'Invalid Image',
+          message: 'Please select a valid image file (PNG, JPG, JPEG, or WEBP).',
+          icon: '📸',
+          type: 'warning'
+        });
+      }
       return;
     }
 
@@ -282,7 +317,14 @@
       const caption = document.getElementById('memory-caption-input').value.trim();
 
       if (!title) {
-        alert('Please enter a memory title.');
+        if (window.showZenitudeNotification) {
+          window.showZenitudeNotification({
+            title: 'Title Required',
+            message: 'Please provide a memorable title for your celebration photo.',
+            icon: '✍️',
+            type: 'warning'
+          });
+        }
         return;
       }
 
