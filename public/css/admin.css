@@ -1935,60 +1935,273 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ========================================
-   ADMIN RESPONSIVE TWEAKS (PRESERVING DESKTOP DASHBOARD LAYOUT)
+   EXECUTIVE ADMIN DYNAMIC RESPONSIVE ENGINE
    ======================================== */
-.celebrants-table-wrap, .table-card {
+
+/* Sidebar Overlay Backdrop for Mobile/Tablet Off-Canvas Drawer */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 99;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s;
+}
+
+.sidebar-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Mobile Toggle Hamburger Button */
+.btn-icon {
+  background: var(--light);
+  border: 1.5px solid var(--border-color);
+  color: var(--dark);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+  background: var(--border-color);
+  color: var(--primary);
+}
+
+/* Base Responsive Container & Touch-Friendly Table Scroll */
+.table-container {
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
 
-@media (max-width: 768px) {
-  #dashboard-view {
-    flex-direction: column;
-    height: auto;
-    overflow: visible;
-  }
+.data-table {
+  min-width: 680px;
+}
 
-  .sidebar {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid var(--border-color);
-  }
-
-  .admin-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 14px;
-    padding: 16px;
-  }
-
-  .header-actions {
-    display: flex;
+/* Breakpoint 1: Medium Laptops & Tablets Landscape (max-width: 1100px) */
+@media (max-width: 1100px) {
+  .top-bar {
+    padding: 16px 24px;
+    gap: 16px;
     flex-wrap: wrap;
-    gap: 8px;
-    width: 100%;
   }
 
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    gap: 16px;
   }
 
-  .search-filter-bar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
+  .content-section {
+    padding: 24px 20px;
+    gap: 20px;
   }
 
-  .modal-card {
-    max-width: calc(100vw - 28px);
-    margin: 0 auto;
+  .settings-grid-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
   }
 }
 
+/* Breakpoint 2: Tablets Portrait & Mobile Devices (max-width: 900px) */
+@media (max-width: 900px) {
+  #dashboard-view {
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  .mobile-toggle {
+    display: block !important;
+  }
+
+  /* Slide-out Off-Canvas Drawer Sidebar */
+  .sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 280px !important;
+    height: 100vh !important;
+    z-index: 1000 !important;
+    transform: translateX(-100%) !important;
+    box-shadow: none !important;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease !important;
+  }
+
+  .sidebar.open {
+    transform: translateX(0) !important;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.45) !important;
+  }
+
+  .main-content {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .top-bar {
+    padding: 14px 16px !important;
+    gap: 12px !important;
+  }
+
+  .top-bar-title-group {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+  }
+
+  .top-bar-title-group h2 {
+    font-size: 1.25rem !important;
+  }
+
+  .top-bar-subtitle {
+    font-size: 0.78rem !important;
+  }
+
+  .top-bar-actions {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+  }
+
+  .search-wrapper {
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+
+  .action-buttons-group {
+    width: 100% !important;
+    display: flex !important;
+    gap: 8px !important;
+  }
+
+  .action-buttons-group button {
+    flex: 1 !important;
+    justify-content: center !important;
+    padding: 9px 12px !important;
+    font-size: 0.82rem !important;
+  }
+
+  .filters-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .filter-pills {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    gap: 6px !important;
+    padding-bottom: 3px !important;
+    width: 100% !important;
+  }
+
+  .filter-pills::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .filter-pills .filter-pill {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+  }
+
+  .sort-wrapper {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+  }
+
+  .sort-select {
+    flex: 1 !important;
+  }
+
+  .content-section {
+    padding: 18px 14px !important;
+  }
+
+  /* Form & Settings Cards */
+  .form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .modal-card {
+    width: 94% !important;
+    max-width: 520px !important;
+    max-height: 90vh !important;
+    padding: 24px 18px !important;
+    margin: 0 auto !important;
+    border-radius: 20px !important;
+  }
+
+  .form-row, .modal-grid-2 {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+}
+
+/* Breakpoint 3: Mobile Phones (max-width: 480px) */
 @media (max-width: 480px) {
+  .login-card {
+    padding: 28px 18px !important;
+    border-radius: 20px !important;
+    margin: 14px !important;
+  }
+
   .stats-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .stat-card {
+    padding: 14px !important;
+  }
+
+  .stat-value {
+    font-size: 1.4rem !important;
+  }
+
+  .top-bar-title-group h2 {
+    font-size: 1.15rem !important;
+  }
+
+  .top-bar-subtitle {
+    font-size: 0.74rem !important;
+  }
+
+  .action-buttons-group {
+    flex-wrap: wrap !important;
+  }
+
+  .action-buttons-group button {
+    min-width: calc(50% - 4px) !important;
+  }
+
+  .action-buttons-group button:last-child {
+    min-width: 100% !important;
+  }
+
+  .content-section {
+    padding: 14px 10px !important;
+    gap: 14px !important;
+  }
+
+  .data-table th, .data-table td {
+    padding: 10px 12px !important;
+    font-size: 0.82rem !important;
   }
 }
