@@ -6,15 +6,19 @@ const fs = require('fs');
 const { Resend } = require('resend');
 
 function getEmailConfig() {
-  const settingsArray = db.prepare('SELECT * FROM settings').all();
-  const settingsObj = {};
-  for (const row of settingsArray) {
-    settingsObj[row.key] = row.value;
+  let settingsObj = {};
+  try {
+    const settingsArray = db.prepare('SELECT * FROM settings').all();
+    for (const row of settingsArray) {
+      settingsObj[row.key] = row.value;
+    }
+  } catch (err) {
+    console.error('[EmailConfig] Error reading settings table:', err.message);
   }
-  
-  const resendApiKey = process.env.RESEND_API_KEY || settingsObj.resend_api_key || '';
-  const fromEmail = process.env.FROM_EMAIL || settingsObj.from_email || 'celebrate@zen.ai';
-  const fromName = process.env.FROM_NAME || settingsObj.from_name || 'Zenitude Celebrations';
+
+  const resendApiKey = (settingsObj.resend_api_key || process.env.RESEND_API_KEY || '').trim();
+  const fromEmail = (settingsObj.from_email || process.env.FROM_EMAIL || 'celebrate@zen.ai').trim();
+  const fromName = (settingsObj.from_name || process.env.FROM_NAME || 'Zenitude Celebrations').trim();
 
   return {
     provider: resendApiKey ? 'resend' : 'smtp',
@@ -22,10 +26,10 @@ function getEmailConfig() {
     fromEmail: fromEmail,
     fromName: fromName,
     fromFormatted: `${fromName} <${fromEmail}>`,
-    host: process.env.SMTP_HOST || settingsObj.smtp_host,
-    port: parseInt(process.env.SMTP_PORT || settingsObj.smtp_port || '587', 10),
-    user: process.env.SMTP_USER || settingsObj.smtp_user,
-    pass: process.env.SMTP_PASS || settingsObj.smtp_pass,
+    host: (settingsObj.smtp_host || process.env.SMTP_HOST || '').trim(),
+    port: parseInt(settingsObj.smtp_port || process.env.SMTP_PORT || '587', 10),
+    user: (settingsObj.smtp_user || process.env.SMTP_USER || '').trim(),
+    pass: (settingsObj.smtp_pass || process.env.SMTP_PASS || '').trim(),
     masterReminder: settingsObj.master_reminder !== 'false'
   };
 }

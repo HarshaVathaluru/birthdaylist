@@ -1885,53 +1885,77 @@ input:focus, select:focus, textarea:focus {
   background: linear-gradient(135deg, #EA580C, #F59E0B) !important;
   color: #FFFFFF !important;
   border: none !important;
-  border-radius: 12px !important;
-  padding: 12px 32px !important;
+  border-radius: 50px !important;
+  padding: 12px 34px !important;
   font-size: 0.95rem !important;
   font-weight: 700 !important;
   cursor: pointer !important;
-  transition: all 0.2s ease !important;
-  box-shadow: 0 6px 18px rgba(234, 88, 12, 0.3) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 8px 24px rgba(234, 88, 12, 0.35) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
 }
 
 .zen-3d-toast-btn:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 8px 24px rgba(234, 88, 12, 0.45) !important;
+  transform: translateY(-2px) scale(1.03) !important;
+  box-shadow: 0 12px 30px rgba(234, 88, 12, 0.5) !important;
 }
 
 .zen-3d-cancel-btn {
-  background: var(--light) !important;
-  color: var(--dark) !important;
-  border: 1.5px solid var(--border-color) !important;
-  border-radius: 12px !important;
-  padding: 11px 24px !important;
+  background: var(--light, #F1F5F9) !important;
+  color: var(--dark-soft, #334155) !important;
+  border: 1.5px solid var(--border-color, #CBD5E1) !important;
+  border-radius: 50px !important;
+  padding: 11px 26px !important;
   font-size: 0.92rem !important;
   font-weight: 700 !important;
   cursor: pointer !important;
-  transition: all 0.2s ease !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+}
+
+[data-theme="dark"] .zen-3d-cancel-btn {
+  background: #334155 !important;
+  color: #F8FAFC !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
 .zen-3d-cancel-btn:hover {
-  background: var(--border-color) !important;
-  transform: translateY(-1px) !important;
+  background: #E2E8F0 !important;
+  color: #0F172A !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="dark"] .zen-3d-cancel-btn:hover {
+  background: #475569 !important;
+  color: #FFFFFF !important;
 }
 
 .zen-3d-confirm-btn {
   background: linear-gradient(135deg, #EF4444, #DC2626) !important;
   color: #FFFFFF !important;
   border: none !important;
-  border-radius: 12px !important;
-  padding: 11px 24px !important;
+  border-radius: 50px !important;
+  padding: 11px 28px !important;
   font-size: 0.92rem !important;
   font-weight: 700 !important;
   cursor: pointer !important;
-  transition: all 0.2s ease !important;
-  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 8px 22px rgba(239, 68, 68, 0.4) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
 }
 
 .zen-3d-confirm-btn:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5) !important;
+  transform: translateY(-2px) scale(1.03) !important;
+  box-shadow: 0 12px 28px rgba(239, 68, 68, 0.55) !important;
+}
+
+.zen-3d-confirm-btn:active, .zen-3d-cancel-btn:active, .zen-3d-toast-btn:active {
+  transform: scale(0.97) !important;
 }
 
 /* ========================================

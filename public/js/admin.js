@@ -1014,27 +1014,61 @@ document.addEventListener('DOMContentLoaded', () => {
   // ===== CSV EXPORT & IMPORT =====
   if (exportCsvBtn) {
     exportCsvBtn.addEventListener('click', async () => {
-      try {
-        showToast('Generating CSV export...', 'info');
-        const res = await fetch('/api/birthdays/export/csv', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!res.ok) {
-          showToast('Failed to export CSV.', 'error');
-          return;
-        }
-        const blob = await res.blob();
+      const activeToken = token || localStorage.getItem('zenitude_admin_token');
+
+      const downloadCsvBlob = (csvString, filename) => {
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
+        a.style.display = 'none';
         a.href = url;
-        const dateStr = new Date().toISOString().slice(0, 10);
-        a.download = `Zenitude_Birthdays_${dateStr}.csv`;
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
-        showToast('CSV Export downloaded successfully!', 'success');
+        setTimeout(() => {
+          if (a.parentNode) a.parentNode.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        }, 300);
+      };
+
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const filename = `Zenitude_Birthdays_${dateStr}.csv`;
+
+      // 1. Try server endpoint first
+      try {
+        if (activeToken) {
+          const res = await fetch(`/api/birthdays/export/csv?token=${encodeURIComponent(activeToken)}`, {
+            headers: { 'Authorization': `Bearer ${activeToken}` }
+          });
+          if (res.ok) {
+            const csvText = await res.text();
+            downloadCsvBlob(csvText, filename);
+            showToast('CSV Export downloaded successfully!', 'success');
+            return;
+          }
+        }
       } catch (err) {
+        console.warn('Server CSV export failed, falling back to local dataset...', err);
+      }
+
+      // 2. Resilient Client-side dataset fallback
+      try {
+        if (birthdays && birthdays.length > 0) {
+          const rows = [['Name', 'Email', 'Date', 'AdvanceAlertDays', 'Notes', 'ReminderEnabled']];
+          for (const b of birthdays) {
+            const escapedName = `"${(b.name || '').replace(/"/g, '""')}"`;
+            const escapedEmail = `"${(b.email || '').replace(/"/g, '""')}"`;
+            const escapedNotes = `"${(b.notes || '').replace(/"/g, '""')}"`;
+            const alertDays = b.remind_days_before || 2;
+            rows.push([escapedName, escapedEmail, b.date || '', alertDays, escapedNotes, b.reminder_enabled ?? 1].join(','));
+          }
+          downloadCsvBlob(rows.join('\n'), filename);
+          showToast('CSV Export downloaded successfully!', 'success');
+        } else {
+          showToast('No birthday records available to export.', 'info');
+        }
+      } catch (fallbackErr) {
+        console.error('CSV export fallback error:', fallbackErr);
         showToast('Error downloading CSV export.', 'error');
       }
     });
@@ -1332,11 +1366,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Helper for resilient token retrieval across devices & page reloads
+  function getActiveToken() {
+    return token || localStorage.getItem('zenitude_admin_token') || '';
+  }
+
   // ===== SETTINGS & SMTP DIAGNOSTICS =====
   async function loadSettings() {
+    const activeToken = getActiveToken();
     try {
-      const res = await fetch('/api/settings', {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const res = await fetch(`/api/settings?token=${encodeURIComponent(activeToken)}`, {
+        headers: { 'Authorization': `Bearer ${activeToken}` }
       });
       if (res.ok) {
         const data = await res.json();
@@ -1348,22 +1388,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     } catch (err) {
-      showToast('Could not load email settings.', 'error');
+      console.warn('Could not load email settings:', err);
     }
   }
 
   settingsForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const activeToken = getActiveToken();
     const formData = new FormData(settingsForm);
     const updates = {};
     formData.forEach((val, key) => { updates[key] = val; });
 
     try {
-      const res = await fetch('/api/settings', {
+      const res = await fetch(`/api/settings?token=${encodeURIComponent(activeToken)}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${activeToken}`
         },
         body: JSON.stringify(updates)
       });
@@ -1380,6 +1421,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (sendTestEmailBtn) {
     sendTestEmailBtn.addEventListener('click', async () => {
+      const activeToken = getActiveToken();
       const targetEmail = testEmailTarget.value.trim();
       if (!targetEmail) {
         showToast('Enter a recipient email to receive the test message.', 'error');
@@ -1390,11 +1432,11 @@ document.addEventListener('DOMContentLoaded', () => {
       sendTestEmailBtn.innerHTML = '<span>Sending...</span>';
 
       try {
-        const res = await fetch('/api/settings/test-email', {
+        const res = await fetch(`/api/settings/test-email?token=${encodeURIComponent(activeToken)}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${activeToken}`
           },
           body: JSON.stringify({ target_email: targetEmail })
         });
