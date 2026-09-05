@@ -41,28 +41,46 @@ router.get('/', (req, res) => {
 
 router.put('/', (req, res) => {
   const updates = req.body;
+  if (!updates || typeof updates !== 'object') {
+    return res.status(400).json({ error: 'Invalid settings payload.' });
+  }
+
   try {
     const stmt = db.prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value');
     
     const transaction = db.transaction((settings) => {
       for (const [key, value] of Object.entries(settings)) {
-        stmt.run(key, String(value));
+        if (value !== undefined && value !== null) {
+          stmt.run(key, String(value).trim());
+        }
       }
     });
     
     transaction(updates);
-    res.json({ success: true });
+
+    // Sync in-memory environment variables immediately
+    if (updates.resend_api_key) process.env.RESEND_API_KEY = String(updates.resend_api_key).trim();
+    if (updates.from_email) process.env.FROM_EMAIL = String(updates.from_email).trim();
+    if (updates.from_name) process.env.FROM_NAME = String(updates.from_name).trim();
+    if (updates.smtp_host) process.env.SMTP_HOST = String(updates.smtp_host).trim();
+    if (updates.smtp_port) process.env.SMTP_PORT = String(updates.smtp_port).trim();
+    if (updates.smtp_user) process.env.SMTP_USER = String(updates.smtp_user).trim();
+    if (updates.smtp_pass) process.env.SMTP_PASS = String(updates.smtp_pass).trim();
+
+    res.json({ success: true, message: 'Settings saved and activated successfully!' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[Settings PUT Error]:', err);
+    res.status(500).json({ error: err.message || 'Failed to save settings' });
   }
 });
 
 router.post('/test-email', async (req, res) => {
-  const { target_email } = req.body;
+  const { target_email } = req.body || {};
   try {
     const result = await emailService.sendTestEmail(target_email);
     res.json({ success: true, message: 'Test email dispatched successfully!', info: result });
   } catch (err) {
+    console.error('[Settings Test Email Error]:', err);
     res.status(500).json({ error: err.message || 'Failed to send test email' });
   }
 });

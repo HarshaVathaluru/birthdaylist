@@ -1399,6 +1399,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const updates = {};
     formData.forEach((val, key) => { updates[key] = val; });
 
+    const saveBtn = document.getElementById('save-settings-btn');
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<span>Saving...</span>';
+    }
+
     try {
       const res = await fetch(`/api/settings?token=${encodeURIComponent(activeToken)}`, {
         method: 'PUT',
@@ -1409,13 +1415,23 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify(updates)
       });
 
+      const data = await res.json().catch(() => ({}));
+
       if (res.ok) {
-        showToast('SMTP configuration saved!', 'success');
+        showToast(data.message || 'Email & Resend configuration saved successfully!', 'success');
+      } else if (res.status === 401 || res.status === 403) {
+        showToast('Your session has expired. Please sign in again.', 'error');
+        setTimeout(() => logoutBtn && logoutBtn.click(), 1800);
       } else {
-        showToast('Failed to save settings.', 'error');
+        showToast(data.error || 'Failed to save settings.', 'error');
       }
     } catch (err) {
-      showToast('Network error.', 'error');
+      showToast('Network error saving settings. Please try again.', 'error');
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<span>Save Email Configuration</span>';
+      }
     }
   });
 

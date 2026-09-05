@@ -485,37 +485,46 @@ async function sendSingleEmailMessage({ to, subject, html, attachments = [] }) {
       }
     }
 
+    const toList = Array.isArray(to) ? to : [to];
+
     try {
-      const response = await resend.emails.send({
+      let response = await resend.emails.send({
         from: config.fromFormatted,
-        to: Array.isArray(to) ? to : [to],
+        to: toList,
         subject: subject,
         html: html,
         attachments: resendAttachments.length > 0 ? resendAttachments : undefined
       });
 
-      if (response.error) {
-        // If domain celebrate@zen.ai is not yet verified on Resend, retry with onboarding@resend.dev
-        const errMsg = response.error.message || '';
-        if (errMsg.includes('domain') || errMsg.includes('verify') || errMsg.includes('validation')) {
-          console.warn(`[Resend] Domain ${config.fromEmail} unverified, retrying with onboarding@resend.dev...`);
-          const fallback = await resend.emails.send({
+      if (response && response.error) {
+        throw new Error(response.error.message || 'Resend delivery error');
+      }
+
+      return response;
+    } catch (sendErr) {
+      const errMsg = (sendErr.message || '').toLowerCase();
+      // If custom domain (e.g. celebrate@zen.ai) is unverified, automatically fallback to onboarding@resend.dev sandbox
+      if (errMsg.includes('domain') || errMsg.includes('verif') || errMsg.includes('validation') || errMsg.includes('403')) {
+        console.warn(`[Resend] Custom domain (${config.fromEmail}) not yet verified. Automatically falling back to onboarding@resend.dev...`);
+        try {
+          const fallbackRes = await resend.emails.send({
             from: `Zenitude Celebrations <onboarding@resend.dev>`,
-            to: Array.isArray(to) ? to : [to],
+            to: toList,
             subject: subject,
             html: html,
             attachments: resendAttachments.length > 0 ? resendAttachments : undefined
           });
-          if (fallback.error) throw new Error(fallback.error.message);
-          return fallback;
+          if (fallbackRes && fallbackRes.error) {
+            throw new Error(fallbackRes.error.message);
+          }
+          console.log('[Resend] Delivered successfully via onboarding@resend.dev fallback!');
+          return fallbackRes;
+        } catch (fallbackErr) {
+          console.error('[Resend Fallback Error]:', fallbackErr.message);
+          throw fallbackErr;
         }
-        throw new Error(errMsg);
       }
-
-      return response;
-    } catch (err) {
-      console.error('[Resend Dispatch Error]', err.message);
-      throw err;
+      throw sendErr;
     }
   }
 
