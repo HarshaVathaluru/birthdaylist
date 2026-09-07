@@ -792,8 +792,8 @@ async function sendBirthdayReminder(birthday, recipients = [], daysUntil, custom
     } else {
       // Circle Member Intimation
       subject = isToday
-        ? `🎉 Today We Celebrate ${birthday.name}'s Birthday!`
-        : `⏰ Upcoming Notice: ${birthday.name}'s Birthday is in ${daysUntil} Days (${formattedDate})`;
+        ? `🎉 Today's Birthday in Zenitude: Celebrating ${birthday.name}!`
+        : `⏰ Upcoming Birthday in Zenitude: ${birthday.name} in ${daysUntil} Days (${formattedDate})`;
       htmlContent = generateCircleIntimationEmailHtml(birthday, daysUntil, contact.name, customMessage);
     }
 
@@ -845,7 +845,7 @@ async function sendTestEmail(targetEmail) {
 
   const result = await sendSingleEmailMessage({
     to: targetEmail || 'delivered@resend.dev',
-    subject: '🧪 [Zenitude Test] Professional Circle Celebration Notice',
+    subject: `🎉 Today's Birthday in Zenitude: Celebrating ${mockBirthday.name}!`,
     html: htmlContent
   });
 
