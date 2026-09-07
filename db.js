@@ -138,8 +138,18 @@ function initSampleData() {
       insertBirthday.run('Ananya Singh', formatMMDD(in25Days), "Don't forget flowers");
       console.log('[Database] Seeded initial sample birthdays.');
     }
+
+    const memoryCount = db.prepare('SELECT COUNT(*) as count FROM memories').get().count;
+    if (memoryCount === 0) {
+      const insertMemory = db.prepare('INSERT INTO memories (title, category, caption, author_name, date_str, photo_data, badge_tag) VALUES (?, ?, ?, ?, ?, ?, ?)');
+      insertMemory.run('Workspace Celebration & Cake Toast', 'celebrations', 'The whole circle gathered together to share delicious cake, joyful memories, and heartfelt wishes.', 'Circle Member', 'Sept 2026', null, 'BIRTHDAY SURPRISE');
+      insertMemory.run('Q3 Milestone Breakthrough Celebration', 'milestones', "Celebrating the team's record milestone achievement with celebratory cheers and virtual circle shoutouts.", 'Karan Mehta', 'August 2026', null, 'PRODUCT LAUNCH');
+      insertMemory.run('Autumn Circle Meet & Gratitude Circle', 'gatherings', 'A cozy evening reflecting on personal growth, milestones, and sharing genuine appreciation across our teams.', 'Rohan Verma', 'July 2026', null, 'TEAM GATHERING');
+      insertMemory.run("Priya's Milestone Welcome & Cake Party", 'celebrations', 'Welcoming Priya to our workspace family with personalized celebration notes and cupcakes.', 'Ananya Singh', 'June 2026', null, 'ANNUAL GALA');
+      console.log('[Database] Seeded initial sample memories.');
+    }
   } catch (err) {
-    console.error('[Database] Error seeding sample birthdays:', err.message);
+    console.error('[Database] Error seeding sample data:', err.message);
   }
 }
 

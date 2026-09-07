@@ -26,7 +26,10 @@
       const res = await fetch('/api/memories');
       if (res.ok) {
         const memories = await res.json();
-        memories.forEach(m => renderMemoryCard(m, false));
+        if (grid) {
+          grid.innerHTML = '';
+          memories.forEach(m => renderMemoryCard(m, false));
+        }
       }
     } catch (e) {
       console.warn('[Memories] Error loading from server:', e);
@@ -435,12 +438,21 @@
         if (fileInput) fileInput.value = '';
         if (previewBox) previewBox.style.display = 'none';
         if (dropzone) dropzone.style.display = 'block';
-        if (addModal) addModal.classList.remove('active');
+        window.closeAddMemoryModal();
+
+        if (window.showZenitudeNotification) {
+          window.showZenitudeNotification({
+            title: 'Memory Published! ✨',
+            message: `"${title}" has been added to the memories wall.`,
+            icon: '📸',
+            type: 'success'
+          });
+        }
 
       } catch (err) {
         console.error('Error saving memory:', err);
         renderMemoryCard(payload, true);
-        if (addModal) addModal.classList.remove('active');
+        window.closeAddMemoryModal();
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
