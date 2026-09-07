@@ -419,68 +419,53 @@
       <section id="settings-section" class="content-section hidden">
         <div class="settings-grid-layout">
           
-          <!-- Email Service Config Card -->
+          <!-- Email Service Environment Config Card -->
           <div class="settings-card">
             <div class="card-header-styled">
-              <h3>📧 Email Dispatch & Resend Configuration</h3>
-              <p>Configure Resend API (recommended for Render cloud) or traditional SMTP credentials.</p>
+              <h3>🔐 Email & Cloud Dispatch Configuration</h3>
+              <p>Credentials & API keys are securely managed via <code>.env</code> and Render environment variables.</p>
             </div>
             
-            <form id="settings-form">
-              <div class="form-grid">
-                
-                <div class="input-group full-width" style="background: rgba(255, 107, 107, 0.05); padding: 16px; border-radius: 12px; border: 1px solid rgba(255, 107, 107, 0.15);">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <label for="resend_api_key" style="font-weight: 700; color: var(--primary); margin: 0;">⚡ Cloud API Key (Brevo / Resend)</label>
-                    <button type="button" id="toggle-resend-key-visibility" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; padding: 2px 6px;">👁️ Reveal Key</button>
-                  </div>
-                  <input type="password" id="resend_api_key" name="resend_api_key" placeholder="xkeysib-... (Brevo) or re_... (Resend)" autocomplete="off">
-                  <span class="field-hint" style="margin-top: 6px; display: block; font-size: 0.78rem; line-height: 1.4;">💡 <strong>Recommended for Render Free:</strong> Paste your <strong>Brevo API Key</strong> (starts with <code>xkeysib-</code>) to send emails directly from <code>zenitudecelebrations@gmail.com</code> without needing a custom domain!</span>
+            <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 10px;">
+              
+              <div style="background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.25); border-radius: 12px; padding: 16px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                  <strong style="color: #16A34A; font-size: 0.95rem;">🟢 System Dispatch Status</strong>
+                  <span id="env-status-badge" style="background: #16A34A; color: #fff; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">ACTIVE</span>
+                </div>
+                <div id="env-provider-name" style="font-weight: 700; font-size: 0.92rem; color: var(--text-heading); margin-bottom: 4px;">⚡ Brevo Cloud REST API (HTTPS Port 443 — Domain-Free)</div>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Automated birthday intimation, celebrant wishes, and reminder emails are dispatched via cloud API.</p>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 14px;">
+                  <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Sender "From" Email</div>
+                  <div id="env-from-email" style="font-weight: 700; color: var(--text-heading); font-size: 0.9rem; margin-top: 4px; word-break: break-all;">zenitudecelebrations@gmail.com</div>
                 </div>
 
-                <div class="input-group">
-                  <label for="from_email">Sender "From" Email</label>
-                  <input type="email" id="from_email" name="from_email" placeholder="celebrate@zen.ai">
-                </div>
-
-                <div class="input-group">
-                  <label for="from_name">Sender "From" Display Name</label>
-                  <input type="text" id="from_name" name="from_name" placeholder="Zenitude Celebrations">
-                </div>
-
-                <div class="input-group">
-                  <label for="smtp_host">SMTP Host (Optional)</label>
-                  <input type="text" id="smtp_host" name="smtp_host" placeholder="smtp.gmail.com">
-                </div>
-                <div class="input-group">
-                  <label for="smtp_port">SMTP Port</label>
-                  <input type="number" id="smtp_port" name="smtp_port" placeholder="587">
-                </div>
-                <div class="input-group">
-                  <label for="smtp_secure">Secure Connection</label>
-                  <select id="smtp_secure" name="smtp_secure">
-                    <option value="false">STARTTLS (Port 587)</option>
-                    <option value="true">SSL / TLS (Port 465)</option>
-                  </select>
-                </div>
-                <div class="input-group">
-                  <label for="smtp_user">SMTP Username / Email</label>
-                  <input type="text" id="smtp_user" name="smtp_user" placeholder="your-email@gmail.com">
-                </div>
-                <div class="input-group full-width">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <label for="smtp_pass" style="margin: 0;">SMTP App Password</label>
-                    <button type="button" id="toggle-smtp-pass-visibility" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; padding: 2px 6px;">👁️ Reveal Password</button>
-                  </div>
-                  <input type="password" id="smtp_pass" name="smtp_pass" placeholder="••••••••••••••••" autocomplete="off">
+                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 14px;">
+                  <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Display Name</div>
+                  <div id="env-from-name" style="font-weight: 700; color: var(--text-heading); font-size: 0.9rem; margin-top: 4px;">Zenitude Celebrations</div>
                 </div>
               </div>
-              <div class="form-actions" style="margin-top: 24px;">
-                <button type="submit" class="btn-primary" id="save-settings-btn">
-                  <span>Save Email Configuration</span>
-                </button>
+
+              <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 14px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Stored API Key / Credential</span>
+                  <span style="font-size: 0.75rem; color: var(--primary); font-weight: 700;">🔒 Managed in .env</span>
+                </div>
+                <div id="env-key-preview" style="font-family: monospace; font-size: 0.88rem; color: var(--text-heading); margin-top: 6px; background: rgba(0,0,0,0.04); padding: 6px 10px; border-radius: 6px;">xkeysib-••••••••••••••••••••XZ3s</div>
               </div>
-            </form>
+
+              <div class="info-alert-box" style="margin-top: 4px;">
+                <span class="info-alert-icon">🛡️</span>
+                <div>
+                  <strong>Protected Environment Storage:</strong>
+                  <p>To modify keys or sender address, update your <code>.env</code> file (locally) or your <strong>Render Dashboard > Environment Variables</strong> (online). All sensitive secrets stay hidden and protected.</p>
+                </div>
+              </div>
+
+            </div>
           </div>
 
           <!-- SMTP Testing & Diagnostics Card -->

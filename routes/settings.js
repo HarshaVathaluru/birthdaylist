@@ -32,26 +32,28 @@ router.use(authenticateToken);
 
 router.get('/', (req, res) => {
   try {
-    const settingsArray = db.prepare('SELECT * FROM settings').all();
-    const settingsObj = {};
-    for (const row of settingsArray) {
-      settingsObj[row.key] = row.value;
+    const config = emailService.getEmailConfig();
+    const hasBrevo = !!(config.brevoApiKey && config.brevoApiKey.startsWith('xkeysib-'));
+    const hasResend = !!(config.resendApiKey && config.resendApiKey.startsWith('re_'));
+    const hasSmtp = !!(config.host && config.user && config.pass);
+
+    let providerLabel = 'Gmail SMTP Direct';
+    if (config.provider === 'brevo') {
+      providerLabel = '⚡ Brevo Cloud REST API (HTTPS Port 443 — Domain-Free)';
+    } else if (config.provider === 'resend') {
+      providerLabel = '⚡ Resend Cloud API (HTTPS Port 443)';
     }
 
-    const resendKey = (settingsObj.resend_api_key && settingsObj.resend_api_key.trim()) || (settingsObj.brevo_api_key && settingsObj.brevo_api_key.trim()) || (process.env.BREVO_API_KEY && process.env.BREVO_API_KEY.trim()) || (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.trim()) || '';
-    const merged = {
-      resend_api_key: resendKey,
-      from_email: settingsObj.from_email || process.env.FROM_EMAIL || 'zenitudecelebrations@gmail.com',
-      from_name: settingsObj.from_name || process.env.FROM_NAME || 'Zenitude Celebrations',
-      smtp_host: settingsObj.smtp_host !== undefined ? settingsObj.smtp_host : (process.env.SMTP_HOST || 'smtp.gmail.com'),
-      smtp_port: settingsObj.smtp_port !== undefined ? settingsObj.smtp_port : (process.env.SMTP_PORT || '465'),
-      smtp_secure: settingsObj.smtp_secure !== undefined ? settingsObj.smtp_secure : (String(process.env.SMTP_PORT || '465') === '465' ? 'true' : 'false'),
-      smtp_user: settingsObj.smtp_user !== undefined ? settingsObj.smtp_user : (process.env.SMTP_USER || 'zenitudecelebrations@gmail.com'),
-      smtp_pass: settingsObj.smtp_pass !== undefined ? settingsObj.smtp_pass : (process.env.SMTP_PASS || ''),
-      ...settingsObj
-    };
-
-    res.json(merged);
+    res.json({
+      provider: config.provider,
+      providerLabel: providerLabel,
+      from_email: config.fromEmail,
+      from_name: config.fromName,
+      has_key: hasBrevo || hasResend,
+      key_preview: hasBrevo ? `xkeysib-••••••••${config.brevoApiKey.slice(-4)}` : (hasResend ? `re_••••••••${config.resendApiKey.slice(-4)}` : (hasSmtp ? 'SMTP App Password Loaded' : 'None')),
+      source: 'Stored securely in .env / Environment Variables',
+      status: (hasBrevo || hasResend || hasSmtp) ? 'Connected & Active' : 'Pending Configuration'
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

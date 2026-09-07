@@ -1375,100 +1375,30 @@ document.addEventListener('DOMContentLoaded', () => {
   // ===== SETTINGS & SMTP DIAGNOSTICS =====
   async function loadSettings() {
     const activeToken = getActiveToken();
-    if (!settingsForm || !activeToken) return;
+    if (!activeToken) return;
     try {
       const res = await fetch(`/api/settings?token=${encodeURIComponent(activeToken)}`, {
         headers: { 'Authorization': `Bearer ${activeToken}` }
       });
       if (res.ok) {
         const data = await res.json();
-        for (const [key, value] of Object.entries(data)) {
-          const input = settingsForm.elements[key];
-          if (input) {
-            input.value = (value !== null && value !== undefined) ? value : '';
-          }
-        }
-        const smtpSecureInput = settingsForm.elements['smtp_secure'];
-        if (smtpSecureInput && data.smtp_port) {
-          smtpSecureInput.value = String(data.smtp_port) === '465' ? 'true' : 'false';
-        }
+        
+        const envStatusBadge = document.getElementById('env-status-badge');
+        const envProviderName = document.getElementById('env-provider-name');
+        const envFromEmail = document.getElementById('env-from-email');
+        const envFromName = document.getElementById('env-from-name');
+        const envKeyPreview = document.getElementById('env-key-preview');
+
+        if (envProviderName && data.providerLabel) envProviderName.textContent = data.providerLabel;
+        if (envFromEmail && data.from_email) envFromEmail.textContent = data.from_email;
+        if (envFromName && data.from_name) envFromName.textContent = data.from_name;
+        if (envKeyPreview && data.key_preview) envKeyPreview.textContent = data.key_preview;
+        if (envStatusBadge && data.status) envStatusBadge.textContent = data.status.toUpperCase();
       }
     } catch (err) {
       console.warn('Could not load email settings:', err);
     }
   }
-
-  const smtpSecureSelect = document.getElementById('smtp_secure');
-  const smtpPortInput = document.getElementById('smtp_port');
-  if (smtpSecureSelect && smtpPortInput) {
-    smtpSecureSelect.addEventListener('change', () => {
-      smtpPortInput.value = smtpSecureSelect.value === 'true' ? '465' : '587';
-    });
-  }
-
-  // API Key & SMTP Password visibility toggles
-  const toggleResendBtn = document.getElementById('toggle-resend-key-visibility');
-  const resendKeyInput = document.getElementById('resend_api_key');
-  if (toggleResendBtn && resendKeyInput) {
-    toggleResendBtn.addEventListener('click', () => {
-      const isPass = resendKeyInput.type === 'password';
-      resendKeyInput.type = isPass ? 'text' : 'password';
-      toggleResendBtn.textContent = isPass ? '🙈 Hide Key' : '👁️ Reveal Key';
-    });
-  }
-
-  const toggleSmtpPassBtn = document.getElementById('toggle-smtp-pass-visibility');
-  const smtpPassInput = document.getElementById('smtp_pass');
-  if (toggleSmtpPassBtn && smtpPassInput) {
-    toggleSmtpPassBtn.addEventListener('click', () => {
-      const isPass = smtpPassInput.type === 'password';
-      smtpPassInput.type = isPass ? 'text' : 'password';
-      toggleSmtpPassBtn.textContent = isPass ? '🙈 Hide Password' : '👁️ Reveal Password';
-    });
-  }
-
-  settingsForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const activeToken = getActiveToken();
-    const formData = new FormData(settingsForm);
-    const updates = {};
-    formData.forEach((val, key) => { updates[key] = val; });
-
-    const saveBtn = document.getElementById('save-settings-btn');
-    if (saveBtn) {
-      saveBtn.disabled = true;
-      saveBtn.innerHTML = '<span>Saving...</span>';
-    }
-
-    try {
-      const res = await fetch(`/api/settings?token=${encodeURIComponent(activeToken)}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${activeToken}`
-        },
-        body: JSON.stringify(updates)
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (res.ok) {
-        showToast(data.message || 'Email & Resend configuration saved successfully!', 'success');
-      } else if (res.status === 401 || res.status === 403) {
-        showToast('Your session has expired. Please sign in again.', 'error');
-        setTimeout(() => logoutBtn && logoutBtn.click(), 1800);
-      } else {
-        showToast(data.error || 'Failed to save settings.', 'error');
-      }
-    } catch (err) {
-      showToast('Network error saving settings. Please try again.', 'error');
-    } finally {
-      if (saveBtn) {
-        saveBtn.disabled = false;
-        saveBtn.innerHTML = '<span>Save Email Configuration</span>';
-      }
-    }
-  });
 
   if (sendTestEmailBtn) {
     sendTestEmailBtn.addEventListener('click', async () => {
