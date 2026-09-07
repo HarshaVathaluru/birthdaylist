@@ -16,18 +16,27 @@ function getEmailConfig() {
     console.error('[EmailConfig] Error reading settings table:', err.message);
   }
 
-  const resendApiKey = (settingsObj.resend_api_key || process.env.RESEND_API_KEY || '').trim();
-  const fromEmail = (settingsObj.from_email || process.env.FROM_EMAIL || 'celebrate@zen.ai').trim();
+  const apiKey = (settingsObj.resend_api_key || settingsObj.brevo_api_key || process.env.BREVO_API_KEY || process.env.RESEND_API_KEY || '').trim();
+  const fromEmail = (settingsObj.from_email || process.env.FROM_EMAIL || 'zenitudecelebrations@gmail.com').trim();
   const fromName = (settingsObj.from_name || process.env.FROM_NAME || 'Zenitude Celebrations').trim();
 
+  let provider = 'smtp';
+  if (apiKey.startsWith('xkeysib-') || process.env.BREVO_API_KEY || settingsObj.brevo_api_key) {
+    provider = 'brevo';
+  } else if (apiKey.startsWith('re_') || process.env.RESEND_API_KEY || settingsObj.resend_api_key) {
+    provider = 'resend';
+  }
+
   return {
-    provider: resendApiKey ? 'resend' : 'smtp',
-    resendApiKey: resendApiKey,
+    provider: provider,
+    apiKey: apiKey,
+    resendApiKey: apiKey.startsWith('re_') ? apiKey : '',
+    brevoApiKey: apiKey.startsWith('xkeysib-') ? apiKey : (settingsObj.brevo_api_key || process.env.BREVO_API_KEY || ''),
     fromEmail: fromEmail,
     fromName: fromName,
     fromFormatted: `${fromName} <${fromEmail}>`,
     host: (settingsObj.smtp_host || process.env.SMTP_HOST || '').trim(),
-    port: parseInt(settingsObj.smtp_port || process.env.SMTP_PORT || '587', 10),
+    port: parseInt(settingsObj.smtp_port || process.env.SMTP_PORT || '465', 10),
     user: (settingsObj.smtp_user || process.env.SMTP_USER || '').trim(),
     pass: (settingsObj.smtp_pass || process.env.SMTP_PASS || '').trim(),
     masterReminder: settingsObj.master_reminder !== 'false'
@@ -475,7 +484,64 @@ function generateCircleIntimationEmailHtml(birthday, daysUntil, recipientName = 
 async function sendSingleEmailMessage({ to, subject, html, attachments = [] }) {
   const config = getEmailConfig();
 
-  // 1. Resend API Dispatch
+  // 1. Brevo REST API (HTTPS - Works on Render Free without custom domain)
+  if (config.brevoApiKey) {
+    const toArray = (Array.isArray(to) ? to : [to]).map(item => {
+      if (typeof item === 'object' && item && item.email) return item;
+      const raw = String(item).trim();
+      const match = raw.match(/<([^>]+)>/);
+      const email = match ? match[1] : raw;
+      const name = match ? raw.split('<')[0].replace(/"/g, '').trim() : undefined;
+      return name ? { email, name } : { email };
+    });
+
+    const brevoAttachments = [];
+    if (Array.isArray(attachments)) {
+      for (const att of attachments) {
+        if (att.path && fs.existsSync(att.path)) {
+          const content = fs.readFileSync(att.path).toString('base64');
+          brevoAttachments.push({
+            name: att.filename,
+            content: content
+          });
+        }
+      }
+    }
+
+    const payload = {
+      sender: {
+        name: config.fromName || 'Zenitude Celebrations',
+        email: config.fromEmail || 'zenitudecelebrations@gmail.com'
+      },
+      to: toArray,
+      subject: subject,
+      htmlContent: html
+    };
+
+    if (brevoAttachments.length > 0) {
+      payload.attachment = brevoAttachments;
+    }
+
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'api-key': config.brevoApiKey
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const resData = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(resData.message || `Brevo dispatch failed (${response.status})`);
+    }
+
+    console.log(`[Brevo API] Email delivered successfully! Message ID: ${resData.messageId || 'OK'}`);
+    return resData;
+  }
+
+  // 2. Resend API Dispatch
   if (config.resendApiKey) {
     const resend = new Resend(config.resendApiKey);
 
