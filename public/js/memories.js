@@ -318,50 +318,47 @@
     const reader = new FileReader();
     reader.onload = (event) => {
       const dataUrl = event.target.result;
-      const img = new Image();
-      img.onload = () => {
-        try {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          const maxDim = 1200;
+      selectedPhotoBase64 = dataUrl;
 
-          if (width > maxDim || height > maxDim) {
-            if (width > height) {
-              height = Math.round((height * maxDim) / width);
-              width = maxDim;
-            } else {
-              width = Math.round((width * maxDim) / height);
-              height = maxDim;
+      // Show live preview immediately
+      if (previewImg && previewBox && dropzone) {
+        previewImg.src = selectedPhotoBase64;
+        previewBox.style.display = 'block';
+        dropzone.style.display = 'none';
+      }
+
+      // Optimize in background
+      try {
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            const maxDim = 1200;
+
+            if (width > maxDim || height > maxDim) {
+              if (width > height) {
+                height = Math.round((height * maxDim) / width);
+                width = maxDim;
+              } else {
+                width = Math.round((width * maxDim) / height);
+                height = maxDim;
+              }
             }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            selectedPhotoBase64 = canvas.toDataURL('image/jpeg', 0.85);
+            if (previewImg) previewImg.src = selectedPhotoBase64;
+          } catch (e) {
+            console.warn('[Memories] Canvas resize skipped, using raw image:', e);
           }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-
-          selectedPhotoBase64 = canvas.toDataURL('image/jpeg', 0.85);
-        } catch (err) {
-          selectedPhotoBase64 = dataUrl;
-        }
-
-        // Show live preview
-        if (previewImg && previewBox && dropzone) {
-          previewImg.src = selectedPhotoBase64;
-          previewBox.style.display = 'block';
-          dropzone.style.display = 'none';
-        }
-      };
-      img.onerror = () => {
-        selectedPhotoBase64 = dataUrl;
-        if (previewImg && previewBox && dropzone) {
-          previewImg.src = selectedPhotoBase64;
-          previewBox.style.display = 'block';
-          dropzone.style.display = 'none';
-        }
-      };
-      img.src = dataUrl;
+        };
+        img.src = dataUrl;
+      } catch (e) {}
     };
     reader.readAsDataURL(file);
   }
@@ -383,11 +380,12 @@
     addMemoryForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const title = document.getElementById('memory-title-input').value.trim();
-      const category = document.getElementById('memory-category-input').value;
-      const badge_tag = document.getElementById('memory-badge-input').value.trim() || 'TEAM MEMORY';
-      const author_name = document.getElementById('memory-author-input').value.trim() || 'Circle Member';
-      const caption = document.getElementById('memory-caption-input').value.trim();
+      const titleInput = document.getElementById('memory-title-input');
+      const title = titleInput ? titleInput.value.trim() : '';
+      const category = (document.getElementById('memory-category-input') || {}).value || 'celebrations';
+      const badge_tag = (document.getElementById('memory-badge-input') || {}).value || 'TEAM MEMORY';
+      const author_name = (document.getElementById('memory-author-input') || {}).value || 'Circle Member';
+      const caption = (document.getElementById('memory-caption-input') || {}).value || '';
 
       if (!title) {
         if (window.showZenitudeNotification) {
@@ -404,15 +402,15 @@
       const submitBtn = document.getElementById('submit-memory-btn');
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Publishing...';
+        submitBtn.innerHTML = '<span>⏳ Publishing...</span>';
       }
 
       const payload = {
         title,
         category,
-        badge_tag,
-        author_name,
-        caption,
+        badge_tag: badge_tag.trim() || 'TEAM MEMORY',
+        author_name: author_name.trim() || 'Circle Member',
+        caption: caption.trim(),
         photo_data: selectedPhotoBase64,
         date_str: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
       };
@@ -483,8 +481,12 @@
     });
   });
 
-  // Init
-  document.addEventListener('DOMContentLoaded', loadServerMemories);
+  // Init Immediately or on DOMContentLoaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadServerMemories);
+  } else {
+    loadServerMemories();
+  }
 
 })();
 

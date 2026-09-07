@@ -210,62 +210,6 @@
         themeToggleBtn.textContent = next === 'dark' ? '☀️' : '🌙';
       });
     }
-
-    // Direct Bulletproof Memories Controller
-    window.openAddMemoryModal = function() {
-      var modal = document.getElementById('add-memory-modal');
-      if (modal) {
-        modal.classList.add('active');
-        modal.style.setProperty('display', 'flex', 'important');
-        modal.style.setProperty('opacity', '1', 'important');
-        modal.style.setProperty('visibility', 'visible', 'important');
-        modal.style.setProperty('pointer-events', 'auto', 'important');
-        modal.style.setProperty('z-index', '999999', 'important');
-      }
-    };
-
-    window.closeAddMemoryModal = function() {
-      var modal = document.getElementById('add-memory-modal');
-      if (modal) {
-        modal.classList.remove('active');
-        modal.style.setProperty('display', 'none', 'important');
-        modal.style.setProperty('opacity', '0', 'important');
-        modal.style.setProperty('visibility', 'hidden', 'important');
-        modal.style.setProperty('pointer-events', 'none', 'important');
-      }
-    };
-
-    window.filterMemories = function(btnElem, filter) {
-      var filterBtns = document.querySelectorAll('.memory-filter-btn');
-      filterBtns.forEach(function(b) {
-        b.classList.remove('active');
-        b.style.background = '';
-        b.style.color = '';
-        b.style.borderColor = '';
-      });
-      if (btnElem) {
-        btnElem.classList.add('active');
-        btnElem.style.background = 'linear-gradient(135deg, #FF6B6B, #FF8E53)';
-        btnElem.style.color = '#FFFFFF';
-        btnElem.style.borderColor = 'transparent';
-      }
-
-      var cards = document.querySelectorAll('.memory-card');
-      cards.forEach(function(card) {
-        var cat = card.getAttribute('data-category');
-        if (filter === 'all' || cat === filter) {
-          card.style.display = 'flex';
-          card.style.opacity = '1';
-          card.style.transform = 'scale(1)';
-        } else {
-          card.style.display = 'none';
-        }
-      });
-
-      if (typeof confetti === 'function' && filter !== 'all') {
-        confetti({ particleCount: 25, spread: 45, origin: { y: 0.6 } });
-      }
-    };
   </script>
 </body>
 </html>
