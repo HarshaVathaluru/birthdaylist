@@ -1406,6 +1406,27 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // API Key & SMTP Password visibility toggles
+  const toggleResendBtn = document.getElementById('toggle-resend-key-visibility');
+  const resendKeyInput = document.getElementById('resend_api_key');
+  if (toggleResendBtn && resendKeyInput) {
+    toggleResendBtn.addEventListener('click', () => {
+      const isPass = resendKeyInput.type === 'password';
+      resendKeyInput.type = isPass ? 'text' : 'password';
+      toggleResendBtn.textContent = isPass ? '🙈 Hide Key' : '👁️ Reveal Key';
+    });
+  }
+
+  const toggleSmtpPassBtn = document.getElementById('toggle-smtp-pass-visibility');
+  const smtpPassInput = document.getElementById('smtp_pass');
+  if (toggleSmtpPassBtn && smtpPassInput) {
+    toggleSmtpPassBtn.addEventListener('click', () => {
+      const isPass = smtpPassInput.type === 'password';
+      smtpPassInput.type = isPass ? 'text' : 'password';
+      toggleSmtpPassBtn.textContent = isPass ? '🙈 Hide Password' : '👁️ Reveal Password';
+    });
+  }
+
   settingsForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const activeToken = getActiveToken();

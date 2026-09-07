@@ -38,8 +38,9 @@ router.get('/', (req, res) => {
       settingsObj[row.key] = row.value;
     }
 
+    const resendKey = (settingsObj.resend_api_key && settingsObj.resend_api_key.trim()) || (settingsObj.brevo_api_key && settingsObj.brevo_api_key.trim()) || (process.env.BREVO_API_KEY && process.env.BREVO_API_KEY.trim()) || (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.trim()) || '';
     const merged = {
-      resend_api_key: settingsObj.resend_api_key !== undefined ? settingsObj.resend_api_key : (settingsObj.brevo_api_key || process.env.BREVO_API_KEY || process.env.RESEND_API_KEY || ''),
+      resend_api_key: resendKey,
       from_email: settingsObj.from_email || process.env.FROM_EMAIL || 'zenitudecelebrations@gmail.com',
       from_name: settingsObj.from_name || process.env.FROM_NAME || 'Zenitude Celebrations',
       smtp_host: settingsObj.smtp_host !== undefined ? settingsObj.smtp_host : (process.env.SMTP_HOST || 'smtp.gmail.com'),

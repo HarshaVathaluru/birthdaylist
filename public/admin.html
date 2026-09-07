@@ -430,9 +430,12 @@
               <div class="form-grid">
                 
                 <div class="input-group full-width" style="background: rgba(255, 107, 107, 0.05); padding: 16px; border-radius: 12px; border: 1px solid rgba(255, 107, 107, 0.15);">
-                  <label for="resend_api_key" style="font-weight: 700; color: var(--primary);">⚡ Cloud API Key (Brevo / Resend — No Custom Domain Needed)</label>
-                  <input type="password" id="resend_api_key" name="resend_api_key" placeholder="xkeysib-... (Brevo) or re_... (Resend)">
-                  <span class="field-hint" style="margin-top: 4px; display: block; font-size: 0.78rem;">💡 Recommended for Render Free: Use <strong>Brevo</strong> (starts with <code>xkeysib-</code>) to send from your <code>@gmail.com</code> without owning a custom domain!</span>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label for="resend_api_key" style="font-weight: 700; color: var(--primary); margin: 0;">⚡ Cloud API Key (Brevo / Resend)</label>
+                    <button type="button" id="toggle-resend-key-visibility" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; padding: 2px 6px;">👁️ Reveal Key</button>
+                  </div>
+                  <input type="password" id="resend_api_key" name="resend_api_key" placeholder="xkeysib-... (Brevo) or re_... (Resend)" autocomplete="off">
+                  <span class="field-hint" style="margin-top: 6px; display: block; font-size: 0.78rem; line-height: 1.4;">💡 <strong>Recommended for Render Free:</strong> Paste your <strong>Brevo API Key</strong> (starts with <code>xkeysib-</code>) to send emails directly from <code>zenitudecelebrations@gmail.com</code> without needing a custom domain!</span>
                 </div>
 
                 <div class="input-group">
@@ -465,8 +468,11 @@
                   <input type="text" id="smtp_user" name="smtp_user" placeholder="your-email@gmail.com">
                 </div>
                 <div class="input-group full-width">
-                  <label for="smtp_pass">SMTP App Password</label>
-                  <input type="password" id="smtp_pass" name="smtp_pass" placeholder="••••••••••••••••">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label for="smtp_pass" style="margin: 0;">SMTP App Password</label>
+                    <button type="button" id="toggle-smtp-pass-visibility" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; padding: 2px 6px;">👁️ Reveal Password</button>
+                  </div>
+                  <input type="password" id="smtp_pass" name="smtp_pass" placeholder="••••••••••••••••" autocomplete="off">
                 </div>
               </div>
               <div class="form-actions" style="margin-top: 24px;">
