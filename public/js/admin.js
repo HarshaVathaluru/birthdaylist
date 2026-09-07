@@ -319,6 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchCircleMembers();
     fetchCircleMessages();
     fetchMemoriesList();
+    loadSettings();
   }
 
   // ===== BIRTHDAYS DATA & CRUD =====
@@ -1374,6 +1375,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ===== SETTINGS & SMTP DIAGNOSTICS =====
   async function loadSettings() {
     const activeToken = getActiveToken();
+    if (!settingsForm || !activeToken) return;
     try {
       const res = await fetch(`/api/settings?token=${encodeURIComponent(activeToken)}`, {
         headers: { 'Authorization': `Bearer ${activeToken}` }
@@ -1383,13 +1385,25 @@ document.addEventListener('DOMContentLoaded', () => {
         for (const [key, value] of Object.entries(data)) {
           const input = settingsForm.elements[key];
           if (input) {
-            input.value = value;
+            input.value = (value !== null && value !== undefined) ? value : '';
           }
+        }
+        const smtpSecureInput = settingsForm.elements['smtp_secure'];
+        if (smtpSecureInput && data.smtp_port) {
+          smtpSecureInput.value = String(data.smtp_port) === '465' ? 'true' : 'false';
         }
       }
     } catch (err) {
       console.warn('Could not load email settings:', err);
     }
+  }
+
+  const smtpSecureSelect = document.getElementById('smtp_secure');
+  const smtpPortInput = document.getElementById('smtp_port');
+  if (smtpSecureSelect && smtpPortInput) {
+    smtpSecureSelect.addEventListener('change', () => {
+      smtpPortInput.value = smtpSecureSelect.value === 'true' ? '465' : '587';
+    });
   }
 
   settingsForm.addEventListener('submit', async (e) => {

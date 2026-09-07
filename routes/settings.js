@@ -31,12 +31,29 @@ router.get('/preview-email', (req, res) => {
 router.use(authenticateToken);
 
 router.get('/', (req, res) => {
-  const settingsArray = db.prepare('SELECT * FROM settings').all();
-  const settingsObj = {};
-  for (const row of settingsArray) {
-    settingsObj[row.key] = row.value;
+  try {
+    const settingsArray = db.prepare('SELECT * FROM settings').all();
+    const settingsObj = {};
+    for (const row of settingsArray) {
+      settingsObj[row.key] = row.value;
+    }
+
+    const merged = {
+      resend_api_key: settingsObj.resend_api_key !== undefined ? settingsObj.resend_api_key : (process.env.BREVO_API_KEY || process.env.RESEND_API_KEY || ''),
+      from_email: settingsObj.from_email || process.env.FROM_EMAIL || 'zenitudecelebrations@gmail.com',
+      from_name: settingsObj.from_name || process.env.FROM_NAME || 'Zenitude Celebrations',
+      smtp_host: settingsObj.smtp_host !== undefined ? settingsObj.smtp_host : (process.env.SMTP_HOST || 'smtp.gmail.com'),
+      smtp_port: settingsObj.smtp_port !== undefined ? settingsObj.smtp_port : (process.env.SMTP_PORT || '465'),
+      smtp_secure: settingsObj.smtp_secure !== undefined ? settingsObj.smtp_secure : (String(process.env.SMTP_PORT || '465') === '465' ? 'true' : 'false'),
+      smtp_user: settingsObj.smtp_user !== undefined ? settingsObj.smtp_user : (process.env.SMTP_USER || 'zenitudecelebrations@gmail.com'),
+      smtp_pass: settingsObj.smtp_pass !== undefined ? settingsObj.smtp_pass : (process.env.SMTP_PASS || ''),
+      ...settingsObj
+    };
+
+    res.json(merged);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  res.json(settingsObj);
 });
 
 router.put('/', (req, res) => {
