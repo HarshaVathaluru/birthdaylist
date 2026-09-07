@@ -100,15 +100,23 @@ function initAdminAccount() {
   }
 }
 
-// Initial default settings initialization (Resend API key + sender email)
+// Initial default settings initialization (Brevo / Resend API key + sender email)
 function initDefaultSettings() {
   try {
-    const insertOrIgnore = db.prepare("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)");
-    if (process.env.RESEND_API_KEY) {
-      insertOrIgnore.run('resend_api_key', process.env.RESEND_API_KEY);
+    const insertOrReplace = db.prepare("INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value");
+    const defaultKey = process.env.BREVO_API_KEY || process.env.RESEND_API_KEY || '';
+    if (defaultKey) {
+      insertOrReplace.run('resend_api_key', defaultKey);
+      insertOrReplace.run('brevo_api_key', defaultKey);
     }
-    insertOrIgnore.run('from_email', process.env.FROM_EMAIL || 'celebrate@zen.ai');
-    insertOrIgnore.run('from_name', process.env.FROM_NAME || 'Zenitude Celebrations');
+    insertOrReplace.run('from_email', process.env.FROM_EMAIL || 'zenitudecelebrations@gmail.com');
+    insertOrReplace.run('from_name', process.env.FROM_NAME || 'Zenitude Celebrations');
+    insertOrReplace.run('smtp_host', process.env.SMTP_HOST || 'smtp.gmail.com');
+    insertOrReplace.run('smtp_port', process.env.SMTP_PORT || '465');
+    insertOrReplace.run('smtp_user', process.env.SMTP_USER || 'zenitudecelebrations@gmail.com');
+    if (process.env.SMTP_PASS) {
+      insertOrReplace.run('smtp_pass', process.env.SMTP_PASS);
+    }
   } catch (err) {
     console.error('[Database] Error provisioning default settings:', err.message);
   }
