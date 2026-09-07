@@ -182,13 +182,13 @@
       <form id="add-memory-form">
         
         <!-- Photo Upload Dropzone & Live Preview -->
-        <input type="file" id="memory-file-input" accept="image/*" style="display: none;">
+        <input type="file" id="memory-file-input" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif,image/*" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0;">
         
-        <div id="memory-dropzone" class="memory-dropzone">
+        <label for="memory-file-input" id="memory-dropzone" class="memory-dropzone" style="cursor: pointer; display: block;">
           <span class="dropzone-icon">🖼️</span>
           <div class="dropzone-text">Click or Drag & Drop photo here</div>
           <div class="dropzone-sub">Supports PNG, JPG, JPEG, WEBP (Instant Auto-Preview)</div>
-        </div>
+        </label>
 
         <!-- Live Photo Preview Box (Hidden until image selected) -->
         <div id="memory-preview-box" class="memory-preview-box" style="display: none;">

@@ -272,8 +272,6 @@
 
   // Photo Dropzone & File Reading
   if (dropzone && fileInput) {
-    dropzone.addEventListener('click', () => fileInput.click());
-
     dropzone.addEventListener('dragover', (e) => {
       e.preventDefault();
       dropzone.classList.add('dragover');
@@ -286,7 +284,7 @@
     dropzone.addEventListener('drop', (e) => {
       e.preventDefault();
       dropzone.classList.remove('dragover');
-      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
         processFile(e.dataTransfer.files[0]);
       }
     });
@@ -300,7 +298,9 @@
 
   // Process & Downscale image for quick loading
   function processFile(file) {
-    if (!file.type.startsWith('image/')) {
+    if (!file) return;
+    const isImg = (file.type && file.type.startsWith('image/')) || /\.(jpe?g|png|webp|gif|bmp|heic|svg)$/i.test(file.name || '');
+    if (!isImg) {
       if (window.showZenitudeNotification) {
         window.showZenitudeNotification({
           title: 'Invalid Image',
@@ -314,30 +314,34 @@
 
     const reader = new FileReader();
     reader.onload = (event) => {
+      const dataUrl = event.target.result;
       const img = new Image();
       img.onload = () => {
-        // Resize to max 1200px width/height for fast transmission
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
-        const maxDim = 1200;
+        try {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const maxDim = 1200;
 
-        if (width > maxDim || height > maxDim) {
-          if (width > height) {
-            height = Math.round((height * maxDim) / width);
-            width = maxDim;
-          } else {
-            width = Math.round((width * maxDim) / height);
-            height = maxDim;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
           }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          selectedPhotoBase64 = canvas.toDataURL('image/jpeg', 0.85);
+        } catch (err) {
+          selectedPhotoBase64 = dataUrl;
         }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-
-        selectedPhotoBase64 = canvas.toDataURL('image/jpeg', 0.85);
 
         // Show live preview
         if (previewImg && previewBox && dropzone) {
@@ -346,7 +350,15 @@
           dropzone.style.display = 'none';
         }
       };
-      img.src = event.target.result;
+      img.onerror = () => {
+        selectedPhotoBase64 = dataUrl;
+        if (previewImg && previewBox && dropzone) {
+          previewImg.src = selectedPhotoBase64;
+          previewBox.style.display = 'block';
+          dropzone.style.display = 'none';
+        }
+      };
+      img.src = dataUrl;
     };
     reader.readAsDataURL(file);
   }
