@@ -1464,7 +1464,8 @@ document.addEventListener('DOMContentLoaded', () => {
           showToast(data.error || 'Failed to dispatch test email.', 'error');
         }
       } catch (err) {
-        showToast('Could not connect to SMTP service.', 'error');
+        console.error('[Test Email Error]:', err);
+        showToast(err.message || 'Could not connect to SMTP service.', 'error');
       } finally {
         sendTestEmailBtn.disabled = false;
         sendTestEmailBtn.innerHTML = '<span>📨 Dispatch Test Email</span>';

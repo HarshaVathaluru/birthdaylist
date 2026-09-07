@@ -40,13 +40,20 @@ function createTransport() {
     return null;
   }
   
+  const isSecure = Number(config.port) === 465;
   return nodemailer.createTransport({
     host: config.host,
     port: config.port,
-    secure: config.port === 465,
+    secure: isSecure,
     auth: {
       user: config.user,
       pass: config.pass
+    },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
+    tls: {
+      rejectUnauthorized: false
     }
   });
 }
