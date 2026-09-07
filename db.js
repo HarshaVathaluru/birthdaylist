@@ -148,6 +148,15 @@ function initSampleData() {
       insertMemory.run("Priya's Milestone Welcome & Cake Party", 'celebrations', 'Welcoming Priya to our workspace family with personalized celebration notes and cupcakes.', 'Ananya Singh', 'June 2026', null, 'ANNUAL GALA');
       console.log('[Database] Seeded initial sample memories.');
     }
+
+    const messageCount = db.prepare('SELECT COUNT(*) as count FROM messages').get().count;
+    if (messageCount === 0) {
+      const insertMsg = db.prepare("INSERT INTO messages (sender_name, message_text, created_at) VALUES (?, ?, datetime('now'))");
+      insertMsg.run('Maya Patel', 'Wishing a wonderful and joyful Birthday to Aarav! 🎂🎉 May this year bring happiness, success, and many memorable moments!');
+      insertMsg.run('Rohan Verma', 'Happy Birthday Aarav! 🥳 Have a great day and enjoy the celebrations!');
+      insertMsg.run('Ananya Singh', 'Warmest birthday wishes from all of us! 🌟✨ Let’s celebrate together!');
+      console.log('[Database] Seeded initial celebration messages for today.');
+    }
   } catch (err) {
     console.error('[Database] Error seeding sample data:', err.message);
   }
