@@ -39,7 +39,7 @@ router.get('/', (req, res) => {
     }
 
     const merged = {
-      resend_api_key: settingsObj.resend_api_key !== undefined ? settingsObj.resend_api_key : (process.env.BREVO_API_KEY || process.env.RESEND_API_KEY || ''),
+      resend_api_key: settingsObj.resend_api_key !== undefined ? settingsObj.resend_api_key : (settingsObj.brevo_api_key || process.env.BREVO_API_KEY || process.env.RESEND_API_KEY || ''),
       from_email: settingsObj.from_email || process.env.FROM_EMAIL || 'zenitudecelebrations@gmail.com',
       from_name: settingsObj.from_name || process.env.FROM_NAME || 'Zenitude Celebrations',
       smtp_host: settingsObj.smtp_host !== undefined ? settingsObj.smtp_host : (process.env.SMTP_HOST || 'smtp.gmail.com'),
@@ -76,7 +76,13 @@ router.put('/', (req, res) => {
     transaction(updates);
 
     // Sync in-memory environment variables immediately
-    if (updates.resend_api_key) process.env.RESEND_API_KEY = String(updates.resend_api_key).trim();
+    if (updates.resend_api_key !== undefined) {
+      const keyVal = String(updates.resend_api_key).trim();
+      process.env.RESEND_API_KEY = keyVal;
+      if (keyVal.startsWith('xkeysib-')) {
+        process.env.BREVO_API_KEY = keyVal;
+      }
+    }
     if (updates.from_email) process.env.FROM_EMAIL = String(updates.from_email).trim();
     if (updates.from_name) process.env.FROM_NAME = String(updates.from_name).trim();
     if (updates.smtp_host) process.env.SMTP_HOST = String(updates.smtp_host).trim();
