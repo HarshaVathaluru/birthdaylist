@@ -122,39 +122,9 @@ function initDefaultSettings() {
   }
 }
 
-// Initial sample data seeding for fresh instances
+// Initial sample data seeding disabled (strictly user-driven, no automated chats/memories)
 function initSampleData() {
-  try {
-    // Note: Fake birthdays are never seeded to ensure only genuine user-added birthdays exist.
-
-    const memoryCount = db.prepare('SELECT COUNT(*) as count FROM memories').get().count;
-    if (memoryCount === 0) {
-      const insertMemory = db.prepare('INSERT INTO memories (title, category, caption, author_name, date_str, photo_data, badge_tag) VALUES (?, ?, ?, ?, ?, ?, ?)');
-      insertMemory.run('Workspace Celebration & Cake Toast', 'celebrations', 'The whole circle gathered together to share delicious cake, joyful memories, and heartfelt wishes.', 'Circle Member', 'Sept 2026', null, 'BIRTHDAY SURPRISE');
-      insertMemory.run('Q3 Milestone Breakthrough Celebration', 'milestones', "Celebrating the team's record milestone achievement with celebratory cheers and virtual circle shoutouts.", 'Karan Mehta', 'August 2026', null, 'PRODUCT LAUNCH');
-      insertMemory.run('Autumn Circle Meet & Gratitude Circle', 'gatherings', 'A cozy evening reflecting on personal growth, milestones, and sharing genuine appreciation across our teams.', 'Rohan Verma', 'July 2026', null, 'TEAM GATHERING');
-      insertMemory.run("Priya's Milestone Welcome & Cake Party", 'celebrations', 'Welcoming Priya to our workspace family with personalized celebration notes and cupcakes.', 'Ananya Singh', 'June 2026', null, 'ANNUAL GALA');
-      console.log('[Database] Seeded initial sample memories.');
-    }
-
-    const messageCount = db.prepare('SELECT COUNT(*) as count FROM messages').get().count;
-    if (messageCount === 0) {
-      const insertMsg = db.prepare("INSERT INTO messages (sender_name, message_text, created_at) VALUES (?, ?, datetime('now'))");
-      insertMsg.run('Maya Patel', 'Wishing a wonderful and joyful Birthday to Aarav! 🎂🎉 May this year bring happiness, success, and many memorable moments!');
-      insertMsg.run('Rohan Verma', 'Happy Birthday Aarav! 🥳 Have a great day and enjoy the celebrations!');
-      insertMsg.run('Ananya Singh', 'Warmest birthday wishes from all of us! 🌟✨ Let’s celebrate together!');
-      console.log('[Database] Seeded initial celebration messages for today.');
-    }
-
-    const memberCount = db.prepare('SELECT COUNT(*) as count FROM circle_members').get().count;
-    if (memberCount === 0) {
-      const insertMember = db.prepare("INSERT OR IGNORE INTO circle_members (name, email) VALUES (?, ?)");
-      insertMember.run('Zenitude Team Circle', process.env.FROM_EMAIL || 'zenitudecelebrations@gmail.com');
-      console.log('[Database] Seeded default circle member.');
-    }
-  } catch (err) {
-    console.error('[Database] Error seeding sample data:', err.message);
-  }
+  // Never add chats, memories, or fake birthdays automatically.
 }
 
 // Migration: Ensure birthdays table has email and remind_days_before columns
