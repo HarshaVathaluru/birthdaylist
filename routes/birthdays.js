@@ -29,22 +29,105 @@ const upload = multer({
   }
 });
 
+const MONTH_MAP = {
+  jan: 1, january: 1,
+  feb: 2, february: 2,
+  mar: 3, march: 3,
+  apr: 4, april: 4,
+  may: 5,
+  jun: 6, june: 6,
+  jul: 7, july: 7,
+  aug: 8, august: 8,
+  sep: 9, sept: 9, september: 9,
+  oct: 10, october: 10,
+  nov: 11, november: 11,
+  dec: 12, december: 12
+};
+
 function normalizeDateStr(dateStr) {
   if (!dateStr) return '01-01';
-  const parts = String(dateStr).trim().split('-').map(Number);
-  let m, d;
-  if (parts.length === 3) {
-    m = parts[1];
-    d = parts[2];
-  } else if (parts.length === 2) {
-    m = parts[0];
-    d = parts[1];
-  } else {
-    return '01-01';
+  let str = String(dateStr).trim().toLowerCase();
+  if (!str) return '01-01';
+
+  // 1. Check for month names (e.g., '24 Sep', 'September 24', '24th September 1995', 'Sep-24')
+  for (const [mName, mNum] of Object.entries(MONTH_MAP)) {
+    const reg = new RegExp('(^|[^a-z])' + mName + '([^a-z]|$)', 'i');
+    if (reg.test(str)) {
+      const cleaned = str.replace(/(?:st|nd|rd|th)/gi, ' ');
+      const nums = cleaned.match(/\d+/g);
+      if (nums && nums.length > 0) {
+        let day = parseInt(nums[0], 10);
+        if (day > 31 && nums.length > 1) day = parseInt(nums[1], 10);
+        if (day >= 1 && day <= 31) {
+          return String(mNum).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+        }
+      }
+    }
   }
-  const mm = String(m).padStart(2, '0');
-  const dd = String(d).padStart(2, '0');
-  return `${mm}-${dd}`;
+
+  // 2. Handle ISO date strings (e.g., '1995-09-24T00:00:00.000Z')
+  if (str.includes('t')) {
+    str = str.split('t')[0];
+  }
+
+  // 3. 4-digit compact strings like '0924'
+  if (/^\d{4}$/.test(str)) {
+    const p1 = parseInt(str.substring(0, 2), 10);
+    const p2 = parseInt(str.substring(2, 4), 10);
+    if (p1 >= 1 && p1 <= 12 && p2 >= 1 && p2 <= 31) {
+      return String(p1).padStart(2, '0') + '-' + String(p2).padStart(2, '0');
+    }
+  }
+
+  // 4. Split on any separator: '-', '/', '.', or whitespace
+  const parts = str.split(/[-/.\s]+/).filter(Boolean).map(p => parseInt(p, 10)).filter(n => !isNaN(n));
+  if (parts.length === 0) return '01-01';
+
+  if (parts.length >= 3) {
+    let [p1, p2, p3] = parts;
+    let month, day;
+
+    if (p1 > 31) {
+      // YYYY-MM-DD or YYYY-DD-MM
+      if (p2 <= 12 && p3 <= 31) {
+        month = p2; day = p3;
+      } else if (p3 <= 12 && p2 <= 31) {
+        month = p3; day = p2;
+      } else {
+        month = p2; day = p3;
+      }
+    } else if (p3 > 31) {
+      // DD-MM-YYYY or MM-DD-YYYY
+      if (p1 > 12 && p2 <= 12) {
+        day = p1; month = p2;
+      } else if (p2 > 12 && p1 <= 12) {
+        month = p1; day = p2;
+      } else {
+        day = p1; month = p2;
+      }
+    } else {
+      month = p1; day = p2;
+    }
+
+    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+      return String(month).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+    }
+  } else if (parts.length === 2) {
+    let [p1, p2] = parts;
+    let month, day;
+    if (p1 > 12 && p2 <= 12) {
+      day = p1; month = p2;
+    } else if (p2 > 12 && p1 <= 12) {
+      month = p1; day = p2;
+    } else {
+      month = p1; day = p2;
+    }
+    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+      return String(month).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+    }
+  }
+
+  return '01-01';
 }
 
 function calculateDaysUntil(dateStr) {
@@ -289,8 +372,22 @@ router.post('/bulk-import', authenticateToken, (req, res) => {
 
   try {
     const insertBirthdayStmt = db.prepare(`
-      INSERT INTO birthdays (name, date, notes, reminder_enabled)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO birthdays (name, email, date, remind_days_before, notes, reminder_enabled)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+    const updateBirthdayStmt = db.prepare(`
+      UPDATE birthdays 
+      SET email = COALESCE(?, email), 
+          date = ?, 
+          remind_days_before = ?, 
+          notes = COALESCE(?, notes), 
+          reminder_enabled = ?
+      WHERE id = ?
+    `);
+    const findExistingStmt = db.prepare(`
+      SELECT id FROM birthdays 
+      WHERE LOWER(TRIM(name)) = LOWER(TRIM(?))
+         OR (email IS NOT NULL AND email != '' AND LOWER(TRIM(email)) = LOWER(TRIM(?)))
     `);
     const insertRecipientStmt = db.prepare(`
       INSERT INTO recipients (birthday_id, email, name)
@@ -298,38 +395,56 @@ router.post('/bulk-import', authenticateToken, (req, res) => {
     `);
 
     let importedCount = 0;
+    let updatedCount = 0;
 
     const importTransaction = db.transaction((list) => {
       for (const item of list) {
         if (!item.name || !item.date) continue;
         const name = String(item.name).trim();
         const date = normalizeDateStr(String(item.date).trim());
+        const email = item.email ? String(item.email).trim() : null;
         const notes = item.notes ? String(item.notes).trim() : null;
-        const reminder = item.reminder_enabled !== undefined ? (item.reminder_enabled ? 1 : 0) : 1;
+        const alertDays = item.remind_days_before ? parseInt(item.remind_days_before, 10) : (item.advance_days ? parseInt(item.advance_days, 10) : 2);
+        const reminder = item.reminder_enabled !== undefined ? (item.reminder_enabled ? 1 : 0) : (item.is_active !== undefined ? (item.is_active ? 1 : 0) : 1);
 
-        const info = insertBirthdayStmt.run(name, date, notes, reminder);
-        const birthdayId = info.lastInsertRowid;
-        importedCount++;
+        const existing = findExistingStmt.get(name, email || '');
+        let birthdayId;
+        if (existing) {
+          updateBirthdayStmt.run(email, date, alertDays, notes, reminder, existing.id);
+          birthdayId = existing.id;
+          updatedCount++;
+        } else {
+          const info = insertBirthdayStmt.run(name, email, date, alertDays, notes, reminder);
+          birthdayId = info.lastInsertRowid;
+          importedCount++;
+        }
 
         if (Array.isArray(item.recipients)) {
           for (const r of item.recipients) {
-            const email = typeof r === 'string' ? r.trim() : (r.email ? String(r.email).trim() : '');
+            const rEmail = typeof r === 'string' ? r.trim() : (r.email ? String(r.email).trim() : '');
             const rName = typeof r === 'object' && r.name ? String(r.name).trim() : null;
-            if (email) {
-              insertRecipientStmt.run(birthdayId, email, rName);
+            if (rEmail) {
+              insertRecipientStmt.run(birthdayId, rEmail, rName);
             }
           }
         } else if (typeof item.recipients === 'string' && item.recipients.trim()) {
           const emails = item.recipients.split(';').map(e => e.trim()).filter(Boolean);
-          for (const email of emails) {
-            insertRecipientStmt.run(birthdayId, email, null);
+          for (const em of emails) {
+            insertRecipientStmt.run(birthdayId, em, null);
           }
         }
       }
     });
 
     importTransaction(birthdays);
-    res.json({ success: true, count: importedCount, message: `Successfully imported ${importedCount} birthday record(s)!` });
+    const total = importedCount + updatedCount;
+    res.json({ 
+      success: true, 
+      count: total, 
+      importedCount,
+      updatedCount,
+      message: `Successfully processed ${total} celebrant record(s) (${importedCount} new, ${updatedCount} updated)!` 
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

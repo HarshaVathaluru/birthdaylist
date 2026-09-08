@@ -618,32 +618,75 @@
     </div>
   </div>
 
-  <!-- BULK IMPORT CSV / JSON MODAL -->
+  <!-- BULK IMPORT CSV / JSON / EXCEL MODAL -->
   <div id="import-modal" class="modal-overlay hidden">
-    <div class="modal-card">
+    <div class="modal-card" style="max-width: 680px; width: 95%;">
       <div class="modal-header">
-        <h3>Bulk Import Birthdays</h3>
+        <div>
+          <h3 style="margin: 0; font-size: 1.15rem;">📥 Bulk Import Celebrants</h3>
+          <p style="margin: 3px 0 0 0; font-size: 0.8rem; color: var(--text-muted);">Supports CSV, Excel copy-paste (TSV), and JSON formats with automatic column mapping.</p>
+        </div>
         <button class="modal-close" id="import-modal-close">&times;</button>
       </div>
 
-      <div class="import-modal-body">
-        <p class="import-help">Paste comma-separated CSV rows or choose a <code>.csv</code> file. Format: <code>Name, Date(MM-DD), Notes</code></p>
+      <div class="import-modal-body" style="padding: 16px 20px;">
         
-        <div class="file-dropzone" id="file-dropzone">
-          <input type="file" id="csv-file-input" accept=".csv, .json" class="hidden">
-          <span class="dropzone-icon">📄</span>
-          <p><strong>Click to choose file</strong> or drag & drop .csv file here</p>
+        <!-- File Dropzone -->
+        <div class="file-dropzone" id="file-dropzone" style="padding: 18px 12px; margin-bottom: 12px;">
+          <input type="file" id="csv-file-input" accept=".csv, .tsv, .txt, .json" class="hidden">
+          <span class="dropzone-icon" style="font-size: 1.8rem;">📄</span>
+          <p style="margin: 4px 0 0 0; font-size: 0.88rem;"><strong>Click to choose file</strong> or drag & drop <code>.csv</code>, <code>.txt</code>, or <code>.json</code></p>
         </div>
 
-        <div class="input-group full-width" style="margin-top: 14px;">
-          <label for="import-text">Or Paste CSV Data Directly:</label>
-          <textarea id="import-text" rows="5" placeholder="Celebrant Name, 09-24, Celebration Notes&#10;Celebrant Name, 11-05, Celebration Notes"></textarea>
+        <!-- Template Shortcuts & Paste Field -->
+        <div class="input-group full-width" style="margin-top: 0;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
+            <label for="import-text" style="font-weight: 700; font-size: 0.85rem; margin: 0;">Or Paste Data Directly:</label>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" class="btn-action-pill" id="template-csv-btn" style="font-size: 0.72rem; padding: 4px 8px; background: rgba(79, 70, 229, 0.08); color: #4F46E5; border: 1px solid rgba(79, 70, 229, 0.25); border-radius: 6px; cursor: pointer;">📋 CSV Template</button>
+              <button type="button" class="btn-action-pill" id="template-json-btn" style="font-size: 0.72rem; padding: 4px 8px; background: rgba(6, 182, 212, 0.08); color: #0891B2; border: 1px solid rgba(6, 182, 212, 0.25); border-radius: 6px; cursor: pointer;">📋 JSON Template</button>
+              <button type="button" class="btn-action-pill" id="clear-import-btn" style="font-size: 0.72rem; padding: 4px 8px; background: rgba(239, 68, 68, 0.08); color: #DC2626; border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 6px; cursor: pointer;">🧹 Clear</button>
+            </div>
+          </div>
+          <textarea id="import-text" rows="4" style="font-family: monospace; font-size: 0.82rem; line-height: 1.45;" placeholder="Name, Email, Date, AdvanceAlertDays, Notes&#10;Harsha Vathaluru, harsha@example.com, 09-08, 2, Lead Engineer&#10;Priya Patel, priya@example.com, 24-09-1995, 2, Reading & Hiking"></textarea>
         </div>
+
+        <!-- Live Parsed Preview Container -->
+        <div id="import-preview-wrapper" style="margin-top: 14px; border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; background: var(--bg-card);">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; background: rgba(79, 70, 229, 0.04); border-bottom: 1px solid var(--border-color);">
+            <strong style="font-size: 0.82rem; color: var(--text-heading);">🔍 Live Import Preview</strong>
+            <span id="import-preview-badge" style="font-size: 0.75rem; font-weight: 700; background: #4F46E5; color: #fff; padding: 2px 8px; border-radius: 6px;">0 Records Detected</span>
+          </div>
+
+          <div style="max-height: 160px; overflow-y: auto; padding: 0;">
+            <table class="data-table" style="font-size: 0.78rem; width: 100%; margin: 0;">
+              <thead>
+                <tr style="background: rgba(0,0,0,0.02);">
+                  <th style="padding: 6px 10px;">Celebrant Name</th>
+                  <th style="padding: 6px 10px;">Email</th>
+                  <th style="padding: 6px 10px;">Celebration Date</th>
+                  <th style="padding: 6px 10px;">Alert</th>
+                  <th style="padding: 6px 10px;">Notes</th>
+                </tr>
+              </thead>
+              <tbody id="import-preview-tbody">
+                <tr>
+                  <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 18px 10px;">
+                    Paste data or choose a file above to preview recognized records before importing.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
 
-      <div class="modal-footer">
+      <div class="modal-footer" style="padding: 12px 20px;">
         <button type="button" class="btn-secondary" id="import-cancel-btn">Cancel</button>
-        <button type="button" class="btn-primary" id="execute-import-btn">Execute Import</button>
+        <button type="button" class="btn-primary" id="execute-import-btn" style="min-width: 150px;">
+          <span>Execute Import</span>
+        </button>
       </div>
     </div>
   </div>

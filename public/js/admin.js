@@ -71,6 +71,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const csvFileInput = document.getElementById('csv-file-input');
   const importText = document.getElementById('import-text');
   const executeImportBtn = document.getElementById('execute-import-btn');
+  const templateCsvBtn = document.getElementById('template-csv-btn');
+  const templateJsonBtn = document.getElementById('template-json-btn');
+  const clearImportBtn = document.getElementById('clear-import-btn');
+  const importPreviewBadge = document.getElementById('import-preview-badge');
+  const importPreviewTbody = document.getElementById('import-preview-tbody');
 
   // Circle Moderation
   const messagesTableBody = document.getElementById('messages-table-body');
@@ -1079,12 +1084,39 @@ document.addEventListener('DOMContentLoaded', () => {
     importBtn.addEventListener('click', () => {
       importText.value = '';
       csvFileInput.value = '';
+      updateImportPreview();
       importModal.classList.remove('hidden');
     });
   }
 
   if (importModalClose) importModalClose.addEventListener('click', () => importModal.classList.add('hidden'));
   if (importCancelBtn) importCancelBtn.addEventListener('click', () => importModal.classList.add('hidden'));
+
+  // Quick Template Buttons
+  if (templateCsvBtn) {
+    templateCsvBtn.addEventListener('click', () => {
+      importText.value = `Name, Email, Date, AdvanceAlertDays, Notes\nHarsha Vathaluru, harsha@example.com, 09-08, 2, Lead Engineer\nPriya Patel, priya@example.com, 24-09-1995, 2, Reading & Hiking\nAarav Sharma, aarav@zenitude.com, 10-15, 3, Marathon Runner`;
+      updateImportPreview();
+    });
+  }
+
+  if (templateJsonBtn) {
+    templateJsonBtn.addEventListener('click', () => {
+      importText.value = JSON.stringify([
+        { name: "Harsha Vathaluru", email: "harsha@example.com", date: "09-08", notes: "Lead Engineer", remind_days_before: 2 },
+        { name: "Priya Patel", email: "priya@example.com", date: "24-09-1995", notes: "Reading & Hiking", remind_days_before: 2 }
+      ], null, 2);
+      updateImportPreview();
+    });
+  }
+
+  if (clearImportBtn) {
+    clearImportBtn.addEventListener('click', () => {
+      importText.value = '';
+      csvFileInput.value = '';
+      updateImportPreview();
+    });
+  }
 
   if (fileDropzone) {
     fileDropzone.addEventListener('click', () => csvFileInput.click());
@@ -1094,6 +1126,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const reader = new FileReader();
         reader.onload = (e) => {
           importText.value = e.target.result;
+          updateImportPreview();
           showToast(`Loaded ${file.name}`, 'info');
         };
         reader.readAsText(file);
@@ -1101,19 +1134,75 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  if (importText) {
+    importText.addEventListener('input', () => updateImportPreview());
+    importText.addEventListener('change', () => updateImportPreview());
+  }
+
+  function updateImportPreview() {
+    if (!importPreviewTbody || !importPreviewBadge) return;
+    const raw = importText ? importText.value.trim() : '';
+    if (!raw) {
+      importPreviewBadge.textContent = '0 Records Detected';
+      importPreviewBadge.style.background = '#64748B';
+      importPreviewTbody.innerHTML = `
+        <tr>
+          <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 18px 10px;">
+            Paste data or choose a file above to preview recognized records before importing.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    const items = parseImportData(raw);
+    importPreviewBadge.textContent = `${items.length} Record${items.length !== 1 ? 's' : ''} Ready`;
+    importPreviewBadge.style.background = items.length > 0 ? '#10B981' : '#EF4444';
+
+    if (items.length === 0) {
+      importPreviewTbody.innerHTML = `
+        <tr>
+          <td colspan="5" style="text-align: center; color: #EF4444; padding: 18px 10px; font-weight: 600;">
+            ⚠️ Could not recognize valid records. Please verify name and celebration date format.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    importPreviewTbody.innerHTML = '';
+    items.forEach(item => {
+      const tr = document.createElement('tr');
+      const emailDisplay = item.email ? `<span style="color: #EA580C; font-weight: 600;">${escapeHtml(item.email)}</span>` : '<span style="color: #94A3B8;">—</span>';
+      const notesDisplay = item.notes ? escapeHtml(item.notes) : '<span style="color: #94A3B8;">—</span>';
+      
+      tr.innerHTML = `
+        <td style="padding: 6px 10px; font-weight: 700; color: var(--text-heading);">${escapeHtml(item.name)}</td>
+        <td style="padding: 6px 10px;">${emailDisplay}</td>
+        <td style="padding: 6px 10px;"><span style="background: rgba(79,70,229,0.1); color: #4F46E5; padding: 2px 7px; border-radius: 4px; font-weight: 700;">🗓️ ${formatDate(item.date)}</span></td>
+        <td style="padding: 6px 10px; color: var(--text-muted);">${item.remind_days_before}d</td>
+        <td style="padding: 6px 10px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${notesDisplay}</td>
+      `;
+      importPreviewTbody.appendChild(tr);
+    });
+  }
+
   if (executeImportBtn) {
     executeImportBtn.addEventListener('click', async () => {
       const raw = importText.value.trim();
       if (!raw) {
-        showToast('Please paste CSV rows or choose a file first.', 'error');
+        showToast('Please paste data or choose a file first.', 'error');
         return;
       }
 
-      const parsedBirthdays = parseCsvData(raw);
+      const parsedBirthdays = parseImportData(raw);
       if (parsedBirthdays.length === 0) {
-        showToast('Could not parse any valid rows. Please check format.', 'error');
+        showToast('Could not parse any valid records. Please check the date format.', 'error');
         return;
       }
+
+      executeImportBtn.disabled = true;
+      executeImportBtn.innerHTML = '<span>Importing...</span>';
 
       try {
         const res = await fetch('/api/birthdays/bulk-import', {
@@ -1127,7 +1216,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const data = await res.json();
         if (res.ok) {
-          showToast(data.message || 'Import completed!', 'success');
+          showToast(data.message || `Successfully processed ${parsedBirthdays.length} celebrant(s)!`, 'success');
           importModal.classList.add('hidden');
           fetchBirthdays();
         } else {
@@ -1135,35 +1224,139 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } catch (err) {
         showToast('Network error during import.', 'error');
+      } finally {
+        executeImportBtn.disabled = false;
+        executeImportBtn.innerHTML = '<span>Execute Import</span>';
       }
     });
   }
 
-  function parseCsvData(csvString) {
-    const lines = csvString.split('\n').map(l => l.trim()).filter(Boolean);
-    const parsed = [];
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      if (i === 0 && line.toLowerCase().includes('name') && line.toLowerCase().includes('date')) {
-        continue;
-      }
-
-      const parts = line.split(',').map(p => p.trim().replace(/^["']|["']$/g, ''));
-      if (parts.length >= 2) {
-        const name = parts[0];
-        let date = parts[1];
-        if (date.length === 4 && !date.includes('-')) {
-          date = date.substring(0, 2) + '-' + date.substring(2, 4);
+  function parseCsvLine(text) {
+    const result = [];
+    let cur = '';
+    let inQuotes = false;
+    const sep = (text.includes('\t') && !text.includes(',')) ? '\t' : (text.includes(';') && !text.includes(',')) ? ';' : ',';
+    
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (c === '"') {
+        if (inQuotes && text[i + 1] === '"') {
+          cur += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
         }
-        const notes = parts[2] || '';
-
-        if (name && date) {
-          parsed.push({ name, date, notes, is_active: 1, remind_days_before: 3 });
-        }
+      } else if (c === sep && !inQuotes) {
+        result.push(cur.trim());
+        cur = '';
+      } else {
+        cur += c;
       }
     }
-    return parsed;
+    result.push(cur.trim());
+    return result;
+  }
+
+  function parseImportData(rawText) {
+    const text = (rawText || '').trim();
+    if (!text) return [];
+
+    // 1. JSON Array Support
+    if (text.startsWith('[') || text.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(text);
+        const list = Array.isArray(parsed) ? parsed : [parsed];
+        return list.map(item => ({
+          name: (item.name || item.celebrant || item.fullName || '').trim(),
+          email: (item.email || item.mail || '').trim() || null,
+          date: normalizeDateInput(item.date || item.birthday || item.dob || ''),
+          notes: (item.notes || item.note || item.description || '').trim() || null,
+          remind_days_before: parseInt(item.remind_days_before || item.advance_days || item.alertDays || 2, 10),
+          reminder_enabled: item.reminder_enabled !== undefined ? (item.reminder_enabled ? 1 : 0) : 1
+        })).filter(b => b.name && b.date && b.date !== '01-01');
+      } catch (e) {}
+    }
+
+    // 2. CSV / TSV / Semicolon Delimited Parsing
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    if (lines.length === 0) return [];
+
+    let nameIdx = -1, emailIdx = -1, dateIdx = -1, notesIdx = -1, alertIdx = -1, reminderIdx = -1;
+    let hasHeader = false;
+
+    const firstLineTokens = parseCsvLine(lines[0]).map(s => s.toLowerCase().replace(/[^a-z0-9]/g, ''));
+    if (firstLineTokens.some(t => t.includes('name') || t.includes('date') || t.includes('email') || t.includes('birthday') || t.includes('bday') || t.includes('dob'))) {
+      hasHeader = true;
+      firstLineTokens.forEach((token, idx) => {
+        if (token.includes('name') || token.includes('celebrant') || token.includes('person')) nameIdx = idx;
+        else if (token.includes('mail')) emailIdx = idx;
+        else if (token.includes('date') || token.includes('birthday') || token.includes('bday') || token.includes('dob')) dateIdx = idx;
+        else if (token.includes('note') || token.includes('bio') || token.includes('desc') || token.includes('hobb')) notesIdx = idx;
+        else if (token.includes('alert') || token.includes('advance') || token.includes('days') || token.includes('reminddays') || token.includes('advancealertdays')) alertIdx = idx;
+        else if (token.includes('remind') || token.includes('status') || token.includes('active') || token.includes('reminderenabled')) reminderIdx = idx;
+      });
+    }
+
+    const results = [];
+    const startRow = hasHeader ? 1 : 0;
+
+    for (let i = startRow; i < lines.length; i++) {
+      const rawCols = parseCsvLine(lines[i]);
+      if (rawCols.length === 0 || (rawCols.length === 1 && !rawCols[0])) continue;
+
+      let name = '', email = '', date = '', notes = '', alertDays = 2, reminderEnabled = 1;
+
+      if (hasHeader && (nameIdx >= 0 || dateIdx >= 0)) {
+        name = nameIdx >= 0 && rawCols[nameIdx] ? rawCols[nameIdx] : '';
+        email = emailIdx >= 0 && rawCols[emailIdx] ? rawCols[emailIdx] : '';
+        date = dateIdx >= 0 && rawCols[dateIdx] ? rawCols[dateIdx] : '';
+        notes = notesIdx >= 0 && rawCols[notesIdx] ? rawCols[notesIdx] : '';
+        if (alertIdx >= 0 && rawCols[alertIdx]) alertDays = parseInt(rawCols[alertIdx], 10) || 2;
+        if (reminderIdx >= 0 && rawCols[reminderIdx]) {
+          const v = String(rawCols[reminderIdx]).toLowerCase();
+          reminderEnabled = (v === '0' || v === 'false' || v === 'no' || v === 'paused') ? 0 : 1;
+        }
+      } else {
+        // Heuristic classification when no headers exist
+        const cols = rawCols.map(c => c.trim());
+        // Check for email
+        const eIdx = cols.findIndex(c => c.includes('@'));
+        if (eIdx !== -1) {
+          email = cols[eIdx];
+          cols.splice(eIdx, 1);
+        }
+        // Check for date (contains numbers and separator or month keyword)
+        const dIdx = cols.findIndex(c => /[0-9]/.test(c) && (c.includes('-') || c.includes('/') || c.includes('.') || Object.keys(MONTH_NAMES).some(m => c.toLowerCase().includes(m.toLowerCase()))));
+        if (dIdx !== -1) {
+          date = cols[dIdx];
+          cols.splice(dIdx, 1);
+        }
+        // First remaining column is name
+        if (cols.length > 0) {
+          name = cols.shift();
+        }
+        // Remaining columns form notes
+        if (cols.length > 0) {
+          notes = cols.join(', ');
+        }
+      }
+
+      const cleanName = name.replace(/^["']|["']$/g, '').trim();
+      const cleanDate = normalizeDateInput(date);
+
+      if (cleanName && cleanDate) {
+        results.push({
+          name: cleanName,
+          email: email.replace(/^["']|["']$/g, '').trim() || null,
+          date: cleanDate,
+          notes: notes.replace(/^["']|["']$/g, '').trim() || null,
+          remind_days_before: alertDays,
+          reminder_enabled: reminderEnabled
+        });
+      }
+    }
+
+    return results;
   }
 
   // ===== CIRCLE CHAT MODERATION =====
