@@ -147,6 +147,16 @@ function generateBirthdayPersonWishEmailHtml(birthday, customMessage = null) {
   const wishBody = customMessage || `On behalf of the entire Zenitude Circle, we wish you a joyous and fulfilling birthday. May this upcoming milestone year bring you robust health, inspiring breakthroughs, enduring happiness, and the continued warmth of friends, family, and colleagues.`;
   const notesText = birthday.notes ? birthday.notes.trim() : '';
 
+  let photoSrc = null;
+  if (birthday.photo) {
+    if (birthday.photo.startsWith('http://') || birthday.photo.startsWith('https://') || birthday.photo.startsWith('data:')) {
+      photoSrc = birthday.photo;
+    } else {
+      const cleanPhoto = birthday.photo.replace(/^\/+/, '').replace(/^uploads\//, '');
+      photoSrc = `${baseUrl}/uploads/${cleanPhoto}`;
+    }
+  }
+
   return `<!DOCTYPE html>
 <html lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
@@ -176,14 +186,14 @@ function generateBirthdayPersonWishEmailHtml(birthday, customMessage = null) {
       .email-main-table { width: 100% !important; max-width: 100% !important; border-radius: 16px !important; }
       .header-cell { padding: 24px 20px 18px 20px !important; }
       .content-cell { padding: 26px 20px 22px 20px !important; }
+      .spotlight-padding-td { padding: 18px 16px !important; }
       .footer-cell { padding: 22px 20px !important; }
       .brand-title { font-size: 20px !important; }
       .badge-tag { font-size: 9.5px !important; padding: 3px 7px !important; }
       .header-date-text { font-size: 11.5px !important; }
       .salutation-title { font-size: 22px !important; }
-      .spotlight-box { padding: 16px 14px !important; margin: 18px 0 !important; }
-      .spotlight-avatar-td { width: 62px !important; padding-right: 12px !important; }
-      .spotlight-avatar-box { width: 58px !important; height: 58px !important; line-height: 58px !important; font-size: 20px !important; }
+      .spotlight-avatar-td { width: 64px !important; padding-right: 14px !important; }
+      .spotlight-avatar-box { width: 60px !important; height: 60px !important; line-height: 60px !important; font-size: 21px !important; }
       .celebrant-name-text { font-size: 18px !important; }
       .btn-container-table { width: 100% !important; margin: 22px 0 12px 0 !important; }
       .btn-cell-stack { display: block !important; width: 100% !important; padding-right: 0 !important; padding-bottom: 10px !important; }
@@ -241,35 +251,41 @@ function generateBirthdayPersonWishEmailHtml(birthday, customMessage = null) {
                 Today marks an extraordinary milestone. On behalf of everyone across the Zenitude Circle, we pause to honor and celebrate <strong>you</strong> — your energy, leadership, and the positive inspiration you bring to our team every single day.
               </p>
 
-              <!-- Celebrant Spotlight Card Component -->
-              <table border="0" cellpadding="0" cellspacing="0" width="100%" class="spotlight-box" style="background: linear-gradient(135deg, #FFF7ED 0%, #FAF5FF 100%); border-radius: 14px; border: 1.5px solid #FED7AA; padding: 20px 22px; margin: 22px 0;">
+              <!-- Celebrant Spotlight Card Component with Generous Nested Padding -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" class="spotlight-card-wrapper" style="background: linear-gradient(135deg, #FFF7ED 0%, #FAF5FF 100%); border-radius: 16px; border: 1.5px solid #FED7AA; margin: 24px 0; box-shadow: 0 4px 14px rgba(254,215,170,0.25);">
                 <tr>
-                  <td width="76" align="center" valign="middle" class="spotlight-avatar-td" style="padding-right: 18px;">
-                    ${birthday.photo ? `
-                      <div class="spotlight-avatar-box" style="width: 70px; height: 70px; border-radius: 50%; border: 3px solid #FF8E53; overflow: hidden; box-shadow: 0 6px 16px rgba(255,142,83,0.3);">
-                        <img src="${birthday.photo.startsWith('http') ? birthday.photo : 'cid:birthdayphoto'}" alt="${celebrantName}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
-                      </div>
-                    ` : `
-                      <div class="spotlight-avatar-box" style="width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, #FF6B6B, #FF8E53); color: #FFFFFF; font-size: 25px; font-weight: 800; line-height: 70px; text-align: center; box-shadow: 0 6px 16px rgba(255,107,107,0.3);">
-                        ${getInitials(celebrantName)}
-                      </div>
-                    `}
-                  </td>
-                  <td valign="middle">
-                    <div style="font-size: 11px; font-weight: 800; color: #C2410C; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">
-                      ✨ TODAY'S HONORED CELEBRANT
-                    </div>
-                    <div class="celebrant-name-text" style="font-size: 20px; font-weight: 800; color: #0F172A; margin-bottom: 3px; letter-spacing: -0.2px;">
-                      ${celebrantName}
-                    </div>
-                    <div style="font-size: 13.5px; color: #64748B;">
-                      Celebration Date: <strong style="color: #0F172A;">${formattedDate}</strong>
-                    </div>
-                    ${notesText ? `
-                      <div style="font-size: 12px; color: #EA580C; margin-top: 5px; font-weight: 600;">
-                        💡 ${notesText}
-                      </div>
-                    ` : ''}
+                  <td class="spotlight-padding-td" style="padding: 24px 26px;">
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td width="78" align="center" valign="middle" class="spotlight-avatar-td" style="padding-right: 20px;">
+                          ${photoSrc ? `
+                            <div class="spotlight-avatar-box" style="width: 72px; height: 72px; border-radius: 50%; border: 3px solid #FF8E53; overflow: hidden; box-shadow: 0 6px 16px rgba(255,142,83,0.3); background-color: #FFFFFF;">
+                              <img src="${photoSrc}" alt="${celebrantName}" style="width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%;" />
+                            </div>
+                          ` : `
+                            <div class="spotlight-avatar-box" style="width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #FF6B6B, #FF8E53); color: #FFFFFF; font-size: 26px; font-weight: 800; line-height: 72px; text-align: center; box-shadow: 0 6px 16px rgba(255,107,107,0.3);">
+                              ${getInitials(celebrantName)}
+                            </div>
+                          `}
+                        </td>
+                        <td valign="middle" class="spotlight-text-td">
+                          <div style="font-size: 11px; font-weight: 800; color: #C2410C; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px;">
+                            ✨ TODAY'S HONORED CELEBRANT
+                          </div>
+                          <div class="celebrant-name-text" style="font-size: 21px; font-weight: 800; color: #0F172A; margin-bottom: 4px; letter-spacing: -0.2px;">
+                            ${celebrantName}
+                          </div>
+                          <div style="font-size: 13.5px; color: #64748B;">
+                            Celebration Date: <strong style="color: #0F172A;">${formattedDate}</strong>
+                          </div>
+                          ${notesText ? `
+                            <div style="font-size: 12.5px; color: #EA580C; margin-top: 6px; font-weight: 600; background: rgba(234,88,12,0.08); padding: 4px 10px; border-radius: 6px; display: inline-block;">
+                              💡 ${notesText}
+                            </div>
+                          ` : ''}
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
               </table>
@@ -346,6 +362,16 @@ function generateCircleIntimationEmailHtml(birthday, daysUntil, recipientName = 
   const isToday = daysUntil === 0;
   const baseUrl = getAppBaseUrl();
   const notesText = birthday.notes ? birthday.notes.trim() : '';
+
+  let photoSrc = null;
+  if (birthday.photo) {
+    if (birthday.photo.startsWith('http://') || birthday.photo.startsWith('https://') || birthday.photo.startsWith('data:')) {
+      photoSrc = birthday.photo;
+    } else {
+      const cleanPhoto = birthday.photo.replace(/^\/+/, '').replace(/^uploads\//, '');
+      photoSrc = `${baseUrl}/uploads/${cleanPhoto}`;
+    }
+  }
 
   const subjectHeader = isToday 
     ? `Today We Celebrate ${celebrantName}'s Birthday!` 
@@ -435,14 +461,14 @@ function generateCircleIntimationEmailHtml(birthday, daysUntil, recipientName = 
       .email-main-table { width: 100% !important; max-width: 100% !important; border-radius: 16px !important; }
       .header-cell { padding: 24px 20px 18px 20px !important; }
       .content-cell { padding: 26px 20px 22px 20px !important; }
+      .spotlight-padding-td { padding: 18px 16px !important; }
       .footer-cell { padding: 22px 20px !important; }
       .brand-title { font-size: 20px !important; }
       .badge-tag { font-size: 9.5px !important; padding: 3px 7px !important; }
       .header-date-text { font-size: 11.5px !important; }
       .salutation-title { font-size: 20px !important; }
-      .spotlight-box { padding: 16px 14px !important; margin: 18px 0 !important; }
-      .spotlight-avatar-td { width: 60px !important; padding-right: 12px !important; }
-      .spotlight-avatar-box { width: 56px !important; height: 56px !important; line-height: 56px !important; font-size: 19px !important; }
+      .spotlight-avatar-td { width: 64px !important; padding-right: 14px !important; }
+      .spotlight-avatar-box { width: 60px !important; height: 60px !important; line-height: 60px !important; font-size: 20px !important; }
       .celebrant-name-text { font-size: 18px !important; }
       .btn-container-table { width: 100% !important; margin: 22px 0 12px 0 !important; }
       .btn-cell-stack { display: block !important; width: 100% !important; padding-right: 0 !important; padding-bottom: 10px !important; }
@@ -506,35 +532,41 @@ function generateCircleIntimationEmailHtml(birthday, daysUntil, recipientName = 
 
               ${customNote}
 
-              <!-- Celebrant Profile Spotlight Card -->
-              <table border="0" cellpadding="0" cellspacing="0" width="100%" class="spotlight-box" style="background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%); border-radius: 14px; border: 1.5px solid #E2E8F0; padding: 20px 22px; margin: 22px 0;">
+              <!-- Celebrant Profile Spotlight Card with Generous Nested Padding -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" class="spotlight-card-wrapper" style="background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%); border-radius: 16px; border: 1.5px solid #E2E8F0; margin: 24px 0; box-shadow: 0 4px 14px rgba(15,23,42,0.04);">
                 <tr>
-                  <td width="76" align="center" valign="middle" class="spotlight-avatar-td" style="padding-right: 18px;">
-                    ${birthday.photo ? `
-                      <div class="spotlight-avatar-box" style="width: 68px; height: 68px; border-radius: 50%; border: 3px solid #4F46E5; overflow: hidden; box-shadow: 0 6px 16px rgba(79,70,229,0.25);">
-                        <img src="${birthday.photo.startsWith('http') ? birthday.photo : 'cid:birthdayphoto'}" alt="${celebrantName}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
-                      </div>
-                    ` : `
-                      <div class="spotlight-avatar-box" style="width: 68px; height: 68px; border-radius: 50%; background: linear-gradient(135deg, #4F46E5, #06B6D4); color: #FFFFFF; font-size: 24px; font-weight: 800; line-height: 68px; text-align: center; box-shadow: 0 6px 16px rgba(79,70,229,0.25);">
-                        ${getInitials(celebrantName)}
-                      </div>
-                    `}
-                  </td>
-                  <td valign="middle">
-                    <div style="font-size: 11px; font-weight: 800; color: #4F46E5; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">
-                      🎂 CELEBRATION SPOTLIGHT
-                    </div>
-                    <div class="celebrant-name-text" style="font-size: 19px; font-weight: 800; color: #0F172A; margin-bottom: 3px; letter-spacing: -0.2px;">
-                      ${celebrantName}
-                    </div>
-                    <div style="font-size: 13.5px; color: #64748B;">
-                      Celebration Date: <strong style="color: #0F172A;">${formattedDate}</strong>
-                    </div>
-                    ${notesText ? `
-                      <div style="font-size: 12px; color: #6366F1; margin-top: 5px; font-weight: 600;">
-                        💡 ${notesText}
-                      </div>
-                    ` : ''}
+                  <td class="spotlight-padding-td" style="padding: 24px 26px;">
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td width="78" align="center" valign="middle" class="spotlight-avatar-td" style="padding-right: 20px;">
+                          ${photoSrc ? `
+                            <div class="spotlight-avatar-box" style="width: 72px; height: 72px; border-radius: 50%; border: 3px solid #4F46E5; overflow: hidden; box-shadow: 0 6px 16px rgba(79,70,229,0.25); background-color: #FFFFFF;">
+                              <img src="${photoSrc}" alt="${celebrantName}" style="width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%;" />
+                            </div>
+                          ` : `
+                            <div class="spotlight-avatar-box" style="width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #4F46E5, #06B6D4); color: #FFFFFF; font-size: 25px; font-weight: 800; line-height: 72px; text-align: center; box-shadow: 0 6px 16px rgba(79,70,229,0.25);">
+                              ${getInitials(celebrantName)}
+                            </div>
+                          `}
+                        </td>
+                        <td valign="middle" class="spotlight-text-td">
+                          <div style="font-size: 11px; font-weight: 800; color: #4F46E5; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px;">
+                            🎂 CELEBRATION SPOTLIGHT
+                          </div>
+                          <div class="celebrant-name-text" style="font-size: 20px; font-weight: 800; color: #0F172A; margin-bottom: 4px; letter-spacing: -0.2px;">
+                            ${celebrantName}
+                          </div>
+                          <div style="font-size: 13.5px; color: #64748B;">
+                            Celebration Date: <strong style="color: #0F172A;">${formattedDate}</strong>
+                          </div>
+                          ${notesText ? `
+                            <div style="font-size: 12.5px; color: #4F46E5; margin-top: 6px; font-weight: 600; background: rgba(79,70,229,0.08); padding: 4px 10px; border-radius: 6px; display: inline-block;">
+                              💡 ${notesText}
+                            </div>
+                          ` : ''}
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
               </table>
