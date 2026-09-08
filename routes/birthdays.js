@@ -49,7 +49,7 @@ function normalizeDateStr(dateStr) {
   let str = String(dateStr).trim().toLowerCase();
   if (!str) return '01-01';
 
-  // 1. Check for month names (e.g., '24 Sep', 'September 24', '24th September 1995', 'Sep-24')
+  // 1. Check for month names (e.g., '24 Sep 1995', 'September 24 1998', '24th September')
   for (const [mName, mNum] of Object.entries(MONTH_MAP)) {
     const reg = new RegExp('(^|[^a-z])' + mName + '([^a-z]|$)', 'i');
     if (reg.test(str)) {
@@ -57,9 +57,18 @@ function normalizeDateStr(dateStr) {
       const nums = cleaned.match(/\d+/g);
       if (nums && nums.length > 0) {
         let day = parseInt(nums[0], 10);
-        if (day > 31 && nums.length > 1) day = parseInt(nums[1], 10);
+        let year = null;
+        if (day > 31) {
+          year = day;
+          if (nums.length > 1) day = parseInt(nums[1], 10);
+        } else if (nums.length > 1) {
+          const second = parseInt(nums[1], 10);
+          if (second > 31) year = second;
+        }
         if (day >= 1 && day <= 31) {
-          return String(mNum).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+          const mm = String(mNum).padStart(2, '0');
+          const dd = String(day).padStart(2, '0');
+          return year ? `${year}-${mm}-${dd}` : `${mm}-${dd}`;
         }
       }
     }
@@ -85,10 +94,11 @@ function normalizeDateStr(dateStr) {
 
   if (parts.length >= 3) {
     let [p1, p2, p3] = parts;
-    let month, day;
+    let year = null, month, day;
 
     if (p1 > 31) {
       // YYYY-MM-DD or YYYY-DD-MM
+      year = p1;
       if (p2 <= 12 && p3 <= 31) {
         month = p2; day = p3;
       } else if (p3 <= 12 && p2 <= 31) {
@@ -98,6 +108,7 @@ function normalizeDateStr(dateStr) {
       }
     } else if (p3 > 31) {
       // DD-MM-YYYY or MM-DD-YYYY
+      year = p3;
       if (p1 > 12 && p2 <= 12) {
         day = p1; month = p2;
       } else if (p2 > 12 && p1 <= 12) {
@@ -110,7 +121,9 @@ function normalizeDateStr(dateStr) {
     }
 
     if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
-      return String(month).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+      const mm = String(month).padStart(2, '0');
+      const dd = String(day).padStart(2, '0');
+      return year ? `${year}-${mm}-${dd}` : `${mm}-${dd}`;
     }
   } else if (parts.length === 2) {
     let [p1, p2] = parts;
@@ -136,7 +149,17 @@ function calculateDaysUntil(dateStr) {
   today.setHours(0, 0, 0, 0);
   
   const norm = normalizeDateStr(dateStr);
-  const [month, day] = norm.split('-').map(Number);
+  const parts = norm.split('-').map(Number);
+  let month, day;
+  if (parts.length === 3) {
+    month = parts[1];
+    day = parts[2];
+  } else if (parts.length === 2) {
+    month = parts[0];
+    day = parts[1];
+  } else {
+    return 999;
+  }
   
   let nextBday = new Date(today.getFullYear(), month - 1, day);
   nextBday.setHours(0, 0, 0, 0);
@@ -149,17 +172,6 @@ function calculateDaysUntil(dateStr) {
   const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); 
   return diffDays;
 }
-
-// Auto-normalize any existing database entries
-try {
-  const existingList = db.prepare('SELECT id, date FROM birthdays').all();
-  for (const row of existingList) {
-    const norm = normalizeDateStr(row.date);
-    if (norm !== row.date) {
-      db.prepare('UPDATE birthdays SET date = ? WHERE id = ?').run(norm, row.id);
-    }
-  }
-} catch (e) {}
 
 // GET all birthdays
 router.get('/', (req, res) => {

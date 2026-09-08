@@ -394,7 +394,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (currentFilter === 'today') return b.days_until === 0;
       if (currentFilter === 'week') return b.days_until >= 0 && b.days_until <= 7;
       if (currentFilter === 'month') {
-        const [m] = b.date.split('-').map(Number);
+        const parts = b.date.split('-').map(Number);
+        const m = parts.length === 3 ? parts[1] : parts[0];
         const currentMonth = new Date().getMonth() + 1;
         return m === currentMonth;
       }
@@ -407,8 +408,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (currentSort === 'name_asc') return a.name.localeCompare(b.name);
       if (currentSort === 'name_desc') return b.name.localeCompare(a.name);
       if (currentSort === 'date_asc') {
-        const [am, ad] = a.date.split('-').map(Number);
-        const [bm, bd] = b.date.split('-').map(Number);
+        const aParts = a.date.split('-').map(Number);
+        const bParts = b.date.split('-').map(Number);
+        const am = aParts.length === 3 ? aParts[1] : aParts[0];
+        const ad = aParts.length === 3 ? aParts[2] : aParts[1];
+        const bm = bParts.length === 3 ? bParts[1] : bParts[0];
+        const bd = bParts.length === 3 ? bParts[2] : bParts[1];
         return (am * 100 + ad) - (bm * 100 + bd);
       }
       return 0;
@@ -562,15 +567,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const calTodayBtn = document.getElementById('cal-today-btn');
   const calDoneBtn = document.getElementById('cal-done-btn');
 
-  function populateYearSelect() {
+  function populateYearSelect(selectedYear = null) {
     if (!calYearSelect) return;
+    const targetY = selectedYear ? parseInt(selectedYear, 10) : (calSelectedYear || new Date().getFullYear());
     calYearSelect.innerHTML = '';
     const nowY = new Date().getFullYear();
-    for (let y = nowY + 5; y >= 1950; y--) {
+    const maxY = Math.max(nowY + 5, targetY + 2);
+    const minY = Math.min(1940, targetY - 5);
+    for (let y = maxY; y >= minY; y--) {
       const opt = document.createElement('option');
       opt.value = y;
       opt.textContent = y;
-      if (y === calCurrentYear) opt.selected = true;
+      if (y === targetY) opt.selected = true;
       calYearSelect.appendChild(opt);
     }
   }
@@ -579,6 +587,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function setDateSelection(y, m, d) {
     calCurrentYear = y;
     calSelectedYear = y;
+    calCurrentMonth = m;
     calSelectedMonth = m;
     calSelectedDay = d;
     const mm = String(m + 1).padStart(2, '0');
@@ -637,6 +646,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!calPopover) return;
     calCurrentMonth = calSelectedMonth;
     calCurrentYear = calSelectedYear;
+    populateYearSelect(calSelectedYear);
     renderCelebrationCalendar();
     calPopover.classList.remove('hidden');
     if (calTrigger) calTrigger.classList.add('active');
@@ -663,6 +673,8 @@ document.addEventListener('DOMContentLoaded', () => {
     calMonthSelect.addEventListener('change', (e) => {
       e.stopPropagation();
       calCurrentMonth = parseInt(calMonthSelect.value, 10);
+      calSelectedMonth = calCurrentMonth;
+      setDateSelection(calSelectedYear, calSelectedMonth, calSelectedDay);
       renderCelebrationCalendar();
     });
   }
@@ -671,6 +683,8 @@ document.addEventListener('DOMContentLoaded', () => {
     calYearSelect.addEventListener('change', (e) => {
       e.stopPropagation();
       calCurrentYear = parseInt(calYearSelect.value, 10);
+      calSelectedYear = calCurrentYear;
+      setDateSelection(calSelectedYear, calSelectedMonth, calSelectedDay);
       renderCelebrationCalendar();
     });
   }
@@ -684,6 +698,10 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         calCurrentMonth--;
       }
+      calSelectedMonth = calCurrentMonth;
+      calSelectedYear = calCurrentYear;
+      populateYearSelect(calSelectedYear);
+      setDateSelection(calSelectedYear, calSelectedMonth, calSelectedDay);
       renderCelebrationCalendar();
     });
   }
@@ -697,6 +715,10 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         calCurrentMonth++;
       }
+      calSelectedMonth = calCurrentMonth;
+      calSelectedYear = calCurrentYear;
+      populateYearSelect(calSelectedYear);
+      setDateSelection(calSelectedYear, calSelectedMonth, calSelectedDay);
       renderCelebrationCalendar();
     });
   }
@@ -705,6 +727,7 @@ document.addEventListener('DOMContentLoaded', () => {
     calTodayBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       const t = new Date();
+      populateYearSelect(t.getFullYear());
       setDateSelection(t.getFullYear(), t.getMonth(), t.getDate());
       renderCelebrationCalendar();
       closeCalendarPopover();
@@ -714,6 +737,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (calDoneBtn) {
     calDoneBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      setDateSelection(calCurrentYear, calCurrentMonth, calSelectedDay);
       closeCalendarPopover();
     });
   }
@@ -750,16 +774,19 @@ document.addEventListener('DOMContentLoaded', () => {
             d = parts[2];
           } else if (parts[2] > 1000) {
             y = parts[2];
-            m = parts[0] - 1;
-            d = parts[1];
+            m = parts[1] - 1;
+            d = parts[0];
           }
         } else if (parts.length === 2) {
           m = parts[0] - 1;
           d = parts[1];
+          y = new Date().getFullYear();
         }
+        populateYearSelect(y);
         setDateSelection(y, m, d);
       } else {
         const t = new Date();
+        populateYearSelect(t.getFullYear());
         setDateSelection(t.getFullYear(), t.getMonth(), t.getDate());
       }
       
@@ -776,6 +803,7 @@ document.addEventListener('DOMContentLoaded', () => {
       birthdayIdInput.value = '';
       document.getElementById('email').value = '';
       const today = new Date();
+      populateYearSelect(today.getFullYear());
       setDateSelection(today.getFullYear(), today.getMonth(), today.getDate());
       document.getElementById('remind_days_before').value = 2;
       document.getElementById('is_active').checked = true;
@@ -818,16 +846,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!str) return '';
     const parts = str.trim().split(/[-/.]/).map(Number);
     if (parts.length === 3) {
-      let m = parts[1];
-      let d = parts[2];
+      let y, m, d;
       if (parts[0] > 1000) {
+        y = parts[0];
         m = parts[1];
         d = parts[2];
       } else if (parts[2] > 1000) {
-        d = parts[0];
+        y = parts[2];
         m = parts[1];
+        d = parts[0];
+      } else {
+        y = parts[0];
+        m = parts[1];
+        d = parts[2];
       }
-      return `${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     } else if (parts.length === 2) {
       let m = parts[0];
       let d = parts[1];
@@ -1634,9 +1667,21 @@ document.addEventListener('DOMContentLoaded', () => {
   // Utilities
   function formatDate(dateStr) {
     if (!dateStr || !dateStr.includes('-')) return dateStr;
-    const [m, d] = dateStr.split('-');
-    const date = new Date(2000, parseInt(m, 10) - 1, parseInt(d, 10));
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const parts = dateStr.split('-');
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    if (parts.length === 3) {
+      const y = parts[0];
+      const m = parseInt(parts[1], 10);
+      const d = parseInt(parts[2], 10);
+      const monthName = months[m - 1] || m;
+      return `${monthName} ${d}, ${y}`;
+    } else if (parts.length === 2) {
+      const m = parseInt(parts[0], 10);
+      const d = parseInt(parts[1], 10);
+      const monthName = months[m - 1] || m;
+      return `${monthName} ${d}`;
+    }
+    return dateStr;
   }
 
   function escapeHtml(str) {

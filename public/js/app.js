@@ -415,7 +415,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ===== LIVE COUNTDOWN TICKER =====
   function startCountdownTicker(dateStr) {
-    const [m, d] = dateStr.split('-').map(Number);
+    const parts = dateStr.split('-').map(Number);
+    const m = parts.length === 3 ? parts[1] : parts[0];
+    const d = parts.length === 3 ? parts[2] : parts[1];
     const now = new Date();
     let targetYear = now.getFullYear();
     let targetDate = new Date(targetYear, m - 1, d, 0, 0, 0);
@@ -850,9 +852,24 @@ document.addEventListener('DOMContentLoaded', () => {
   // ===== UTILITIES =====
   function formatDate(dateStr) {
     if (!dateStr || !dateStr.includes('-')) return dateStr;
-    const [m, d] = dateStr.split('-');
-    const date = new Date(2000, parseInt(m, 10) - 1, parseInt(d, 10));
-    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+    const parts = dateStr.split('-');
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    if (parts.length === 3) {
+      const y = parts[0];
+      const m = parseInt(parts[1], 10);
+      const d = parseInt(parts[2], 10);
+      const monthName = months[m - 1] || m;
+      return `${monthName} ${d}, ${y}`;
+    } else if (parts.length === 2) {
+      const m = parseInt(parts[0], 10);
+      const d = parseInt(parts[1], 10);
+      const monthName = months[m - 1] || m;
+      return `${monthName} ${d}`;
+    }
+    return dateStr;
   }
 
   function getInitials(name) {
@@ -864,7 +881,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function getZodiacSign(dateStr) {
     if (!dateStr || !dateStr.includes('-')) return { name: 'Star', symbol: '✨' };
-    const [m, d] = dateStr.split('-').map(Number);
+    const parts = dateStr.split('-').map(Number);
+    const m = parts.length === 3 ? parts[1] : parts[0];
+    const d = parts.length === 3 ? parts[2] : parts[1];
     const zodiacs = [
       { name: 'Capricorn', symbol: '♑', endMonth: 1, endDay: 19 },
       { name: 'Aquarius', symbol: '♒', endMonth: 2, endDay: 18 },
@@ -891,7 +910,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function getGoogleCalendarUrl(bday) {
     const now = new Date();
-    const [m, d] = bday.date.split('-').map(Number);
+    const parts = bday.date.split('-').map(Number);
+    const m = parts.length === 3 ? parts[1] : parts[0];
+    const d = parts.length === 3 ? parts[2] : parts[1];
     let targetYear = now.getFullYear();
     const bdayDate = new Date(targetYear, m - 1, d);
     if (bdayDate < now && bday.days_until > 0) {
