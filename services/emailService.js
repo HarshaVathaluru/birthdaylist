@@ -900,9 +900,10 @@ function calculateDaysUntil(dateStr) {
 // AUTOMATED CRON SCHEDULE (Runs daily at 07:00 AM)
 // ============================================================================
 function startCronJob() {
-  // Run daily at 07:00 AM (0 7 * * *)
+  const cronTimezone = process.env.TIMEZONE || process.env.TZ || 'Asia/Kolkata';
+  // Run daily at 07:00 AM in local timezone (0 7 * * *)
   cron.schedule('0 7 * * *', async () => {
-    console.log('[Cron] Running daily 07:00 AM birthday reminder check...');
+    console.log(`[Cron] Running daily 07:00 AM birthday reminder check in ${cronTimezone}...`);
     
     const config = getEmailConfig();
     if (!config.masterReminder) {
@@ -926,9 +927,11 @@ function startCronJob() {
     } catch (error) {
       console.error('[Cron] Error running daily 07:00 AM birthday cron:', error);
     }
+  }, {
+    timezone: cronTimezone
   });
   
-  console.log('Birthday reminder cron job started (runs daily at 07:00 AM).');
+  console.log(`Birthday reminder cron job started (runs daily at 07:00 AM ${cronTimezone}).`);
 }
 
 module.exports = {

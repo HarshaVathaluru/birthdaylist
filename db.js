@@ -125,27 +125,7 @@ function initDefaultSettings() {
 // Initial sample data seeding for fresh instances
 function initSampleData() {
   try {
-    const birthdayCount = db.prepare('SELECT COUNT(*) as count FROM birthdays').get().count;
-    if (birthdayCount === 0) {
-      const now = new Date();
-      const formatMMDD = (date) => `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-      
-      const in3Days = new Date(now);
-      in3Days.setDate(now.getDate() + 3);
-      
-      const in7Days = new Date(now);
-      in7Days.setDate(now.getDate() + 7);
-      
-      const in25Days = new Date(now);
-      in25Days.setDate(now.getDate() + 25);
-      
-      const insertBirthday = db.prepare('INSERT INTO birthdays (name, date, notes) VALUES (?, ?, ?)');
-      insertBirthday.run('Aarav Sharma', formatMMDD(now), 'Loves chocolate cake & photography 🎉');
-      insertBirthday.run('Priya Patel', formatMMDD(in3Days), 'Gift idea: Books or coffee shop gift card');
-      insertBirthday.run('Rahul Verma', formatMMDD(in7Days), 'Planning a surprise rooftop dinner');
-      insertBirthday.run('Ananya Singh', formatMMDD(in25Days), "Don't forget flowers");
-      console.log('[Database] Seeded initial sample birthdays.');
-    }
+    // Note: Fake birthdays are never seeded to ensure only genuine user-added birthdays exist.
 
     const memoryCount = db.prepare('SELECT COUNT(*) as count FROM memories').get().count;
     if (memoryCount === 0) {
