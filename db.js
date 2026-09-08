@@ -165,6 +165,13 @@ function initSampleData() {
       insertMsg.run('Ananya Singh', 'Warmest birthday wishes from all of us! 🌟✨ Let’s celebrate together!');
       console.log('[Database] Seeded initial celebration messages for today.');
     }
+
+    const memberCount = db.prepare('SELECT COUNT(*) as count FROM circle_members').get().count;
+    if (memberCount === 0) {
+      const insertMember = db.prepare("INSERT OR IGNORE INTO circle_members (name, email) VALUES (?, ?)");
+      insertMember.run('Zenitude Team Circle', process.env.FROM_EMAIL || 'zenitudecelebrations@gmail.com');
+      console.log('[Database] Seeded default circle member.');
+    }
   } catch (err) {
     console.error('[Database] Error seeding sample data:', err.message);
   }

@@ -738,10 +738,11 @@ function getAllCircleRecipients(specificRecipients = []) {
 async function sendBirthdayReminder(birthday, recipients = [], daysUntil, customMessage = null) {
   const config = getEmailConfig();
   const contacts = getAllCircleRecipients(recipients);
+  const celebrantDirectEmail = (birthday.email || '').trim().toLowerCase();
 
-  if (contacts.length === 0) {
-    console.warn(`No circle members configured for ${birthday.name}`);
-    return { success: false, error: 'No circle members configured in the Auto-Trigger Directory. Add members in Admin.' };
+  if (contacts.length === 0 && !celebrantDirectEmail) {
+    console.warn(`No circle members or celebrant email configured for ${birthday.name}`);
+    return { success: false, error: 'No circle members configured in Auto-Trigger Directory and no direct celebrant email provided.' };
   }
 
   const attachments = [];
@@ -761,8 +762,8 @@ async function sendBirthdayReminder(birthday, recipients = [], daysUntil, custom
   const isToday = daysUntil === 0;
 
   let successCount = 0;
+  let lastError = null;
   const celebrantCleanName = (birthday.name || '').trim().toLowerCase();
-  const celebrantDirectEmail = (birthday.email || '').trim().toLowerCase();
   let birthdayPersonDelivered = false;
 
   for (const contact of contacts) {
@@ -808,6 +809,7 @@ async function sendBirthdayReminder(birthday, recipients = [], daysUntil, custom
       });
       successCount++;
     } catch (err) {
+      lastError = err.message;
       console.error(`[Email Service] Failed sending to ${contact.email}:`, err.message);
     }
   }
@@ -824,8 +826,17 @@ async function sendBirthdayReminder(birthday, recipients = [], daysUntil, custom
       successCount++;
       console.log(`[Email Service] Directly sent VIP celebration wish to celebrant email: ${birthday.email}`);
     } catch (err) {
+      lastError = err.message;
       console.error(`[Email Service] Failed sending direct celebrant email to ${birthday.email}:`, err.message);
     }
+  }
+
+  if (successCount === 0) {
+    return {
+      success: false,
+      recipientCount: 0,
+      error: lastError || 'Email delivery failed. Please check your Brevo Authorized IPs settings.'
+    };
   }
 
   console.log(`[Email Service] Dispatched tailored professional emails for ${birthday.name} to ${successCount} recipients via ${config.provider.toUpperCase()}.`);

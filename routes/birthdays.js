@@ -274,9 +274,9 @@ router.post('/:id/send-email', async (req, res) => {
   const result = await emailService.sendBirthdayReminder(birthday, [], daysUntil, message);
 
   if (result.success) {
-    res.json({ success: true, message: `Celebration email dispatched to ${result.recipientCount} circle recipient${result.recipientCount !== 1 ? 's' : ''}!` });
+    res.json({ success: true, message: `Celebration email dispatched to ${result.recipientCount} recipient${result.recipientCount !== 1 ? 's' : ''}!` });
   } else {
-    res.status(500).json({ error: result.error || 'Failed to dispatch email. Please check your Resend/SMTP settings in Admin.' });
+    res.status(500).json({ error: result.error || 'Failed to dispatch email. Please check your Brevo / Cloud API settings in .env.' });
   }
 });
 
