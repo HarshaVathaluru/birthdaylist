@@ -560,103 +560,108 @@ function generateCircleIntimationEmailHtml(birthday, daysUntil, recipientName = 
 // ============================================================================
 async function sendSingleEmailMessage({ to, subject, html, attachments = [] }) {
   const config = getEmailConfig();
+  let lastDispatchError = null;
 
   // 1. Brevo REST API (HTTPS - Works on Render Free without custom domain)
   if (config.brevoApiKey) {
-    const toArray = (Array.isArray(to) ? to : [to]).map(item => {
-      if (typeof item === 'object' && item && item.email) return item;
-      const raw = String(item).trim();
-      const match = raw.match(/<([^>]+)>/);
-      const email = match ? match[1] : raw;
-      const name = match ? raw.split('<')[0].replace(/"/g, '').trim() : undefined;
-      return name ? { email, name } : { email };
-    });
+    try {
+      const toArray = (Array.isArray(to) ? to : [to]).map(item => {
+        if (typeof item === 'object' && item && item.email) return item;
+        const raw = String(item).trim();
+        const match = raw.match(/<([^>]+)>/);
+        const email = match ? match[1] : raw;
+        const name = match ? raw.split('<')[0].replace(/"/g, '').trim() : undefined;
+        return name ? { email, name } : { email };
+      });
 
-    const brevoAttachments = [];
-    if (Array.isArray(attachments)) {
-      for (const att of attachments) {
-        if (att.path && fs.existsSync(att.path)) {
-          const content = fs.readFileSync(att.path).toString('base64');
-          brevoAttachments.push({
-            name: att.filename,
-            content: content
-          });
+      const brevoAttachments = [];
+      if (Array.isArray(attachments)) {
+        for (const att of attachments) {
+          if (att.path && fs.existsSync(att.path)) {
+            const content = fs.readFileSync(att.path).toString('base64');
+            brevoAttachments.push({
+              name: att.filename,
+              content: content
+            });
+          }
         }
       }
+
+      const payload = {
+        sender: {
+          name: config.fromName || 'Zenitude Celebrations',
+          email: config.fromEmail || 'zenitudecelebrations@gmail.com'
+        },
+        to: toArray,
+        subject: subject,
+        htmlContent: html
+      };
+
+      if (brevoAttachments.length > 0) {
+        payload.attachment = brevoAttachments;
+      }
+
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'api-key': config.brevoApiKey
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const resData = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(resData.message || `Brevo dispatch failed (${response.status})`);
+      }
+
+      console.log(`[Brevo API] Email delivered successfully! Message ID: ${resData.messageId || 'OK'}`);
+      return resData;
+    } catch (brevoErr) {
+      lastDispatchError = brevoErr;
+      console.warn(`[Brevo Warning] ${brevoErr.message}. Attempting fallback to Gmail SMTP...`);
     }
-
-    const payload = {
-      sender: {
-        name: config.fromName || 'Zenitude Celebrations',
-        email: config.fromEmail || 'zenitudecelebrations@gmail.com'
-      },
-      to: toArray,
-      subject: subject,
-      htmlContent: html
-    };
-
-    if (brevoAttachments.length > 0) {
-      payload.attachment = brevoAttachments;
-    }
-
-    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'api-key': config.brevoApiKey
-      },
-      body: JSON.stringify(payload)
-    });
-
-    const resData = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(resData.message || `Brevo dispatch failed (${response.status})`);
-    }
-
-    console.log(`[Brevo API] Email delivered successfully! Message ID: ${resData.messageId || 'OK'}`);
-    return resData;
   }
 
   // 2. Resend API Dispatch
   if (config.resendApiKey) {
-    const resend = new Resend(config.resendApiKey);
+    try {
+      const resend = new Resend(config.resendApiKey);
 
-    const resendAttachments = [];
-    if (Array.isArray(attachments)) {
-      for (const att of attachments) {
-        if (att.path && fs.existsSync(att.path)) {
-          const content = fs.readFileSync(att.path);
-          resendAttachments.push({
-            filename: att.filename,
-            content: content
-          });
+      const resendAttachments = [];
+      if (Array.isArray(attachments)) {
+        for (const att of attachments) {
+          if (att.path && fs.existsSync(att.path)) {
+            const content = fs.readFileSync(att.path);
+            resendAttachments.push({
+              filename: att.filename,
+              content: content
+            });
+          }
         }
       }
-    }
 
-    const toList = Array.isArray(to) ? to : [to];
+      const toList = Array.isArray(to) ? to : [to];
 
-    try {
-      let response = await resend.emails.send({
-        from: config.fromFormatted,
-        to: toList,
-        subject: subject,
-        html: html,
-        attachments: resendAttachments.length > 0 ? resendAttachments : undefined
-      });
+      try {
+        let response = await resend.emails.send({
+          from: config.fromFormatted,
+          to: toList,
+          subject: subject,
+          html: html,
+          attachments: resendAttachments.length > 0 ? resendAttachments : undefined
+        });
 
-      if (response && response.error) {
-        throw new Error(response.error.message || 'Resend delivery error');
-      }
+        if (response && response.error) {
+          throw new Error(response.error.message || 'Resend delivery error');
+        }
 
-      return response;
-    } catch (sendErr) {
-      const errMsg = (sendErr.message || '').toLowerCase();
-      // If custom domain (e.g. celebrate@zen.ai) is unverified, automatically fallback to onboarding@resend.dev sandbox
-      if (errMsg.includes('domain') || errMsg.includes('verif') || errMsg.includes('validation') || errMsg.includes('403')) {
-        console.warn(`[Resend] Custom domain (${config.fromEmail}) not yet verified. Automatically falling back to onboarding@resend.dev...`);
-        try {
+        return response;
+      } catch (sendErr) {
+        const errMsg = (sendErr.message || '').toLowerCase();
+        if (errMsg.includes('domain') || errMsg.includes('verif') || errMsg.includes('validation') || errMsg.includes('403')) {
+          console.warn(`[Resend] Custom domain (${config.fromEmail}) not verified. Falling back to onboarding@resend.dev...`);
           const fallbackRes = await resend.emails.send({
             from: `Zenitude Celebrations <onboarding@resend.dev>`,
             to: toList,
@@ -669,28 +674,36 @@ async function sendSingleEmailMessage({ to, subject, html, attachments = [] }) {
           }
           console.log('[Resend] Delivered successfully via onboarding@resend.dev fallback!');
           return fallbackRes;
-        } catch (fallbackErr) {
-          console.error('[Resend Fallback Error]:', fallbackErr.message);
-          throw fallbackErr;
         }
+        throw sendErr;
       }
-      throw sendErr;
+    } catch (resendErr) {
+      lastDispatchError = resendErr;
+      console.warn(`[Resend Warning] ${resendErr.message}. Attempting fallback to Gmail SMTP...`);
     }
   }
 
-  // 2. Fallback to Nodemailer SMTP
+  // 3. Nodemailer SMTP Dispatch (Direct Gmail / Custom Host)
   const transporter = createTransport();
-  if (!transporter) {
-    throw new Error('No email provider configured. Please check your Resend API key or SMTP settings in Admin.');
+  if (transporter) {
+    try {
+      const smtpRes = await transporter.sendMail({
+        from: config.fromFormatted,
+        to: to,
+        subject: subject,
+        html: html,
+        attachments: attachments
+      });
+      console.log(`[Gmail SMTP] Email delivered successfully! Message ID: ${smtpRes.messageId}`);
+      return smtpRes;
+    } catch (smtpErr) {
+      console.error('[SMTP Error]:', smtpErr.message);
+      throw (lastDispatchError ? new Error(`${lastDispatchError.message} (SMTP Fallback also failed: ${smtpErr.message})`) : smtpErr);
+    }
   }
 
-  return await transporter.sendMail({
-    from: config.fromFormatted,
-    to: to,
-    subject: subject,
-    html: html,
-    attachments: attachments
-  });
+  if (lastDispatchError) throw lastDispatchError;
+  throw new Error('No working email provider configured. Please check your Brevo or SMTP credentials.');
 }
 
 // ============================================================================
