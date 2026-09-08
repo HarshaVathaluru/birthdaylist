@@ -149,9 +149,67 @@ document.addEventListener('DOMContentLoaded', () => {
     if (themeBtnIcon) themeBtnIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
   }
 
+  // Resilient API Client with automatic auth headers, session expiry redirect, and safe JSON parsing
+  async function apiFetch(url, options = {}) {
+    const activeToken = token || localStorage.getItem('zenitude_admin_token');
+    const headers = options.headers ? { ...options.headers } : {};
+
+    if (activeToken && !headers['Authorization']) {
+      headers['Authorization'] = `Bearer ${activeToken}`;
+    }
+
+    try {
+      const res = await fetch(url, { ...options, headers });
+
+      if (res.status === 401 || res.status === 403) {
+        token = null;
+        localStorage.removeItem('zenitude_admin_token');
+        showLogin();
+        let errMsg = 'Your session has expired. Please log in again.';
+        try {
+          const json = await res.json();
+          if (json && json.error) errMsg = json.error;
+        } catch (e) {}
+        showToast(errMsg, 'error');
+        return { ok: false, status: res.status, data: null, error: errMsg };
+      }
+
+      let data = null;
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        try {
+          data = await res.json();
+        } catch (e) {
+          data = null;
+        }
+      } else {
+        try {
+          data = await res.text();
+        } catch (e) {
+          data = null;
+        }
+      }
+
+      return {
+        ok: res.ok,
+        status: res.status,
+        data,
+        error: res.ok ? null : (data && data.error ? data.error : (typeof data === 'string' && data.length < 200 ? data : `Request failed (${res.status})`))
+      };
+    } catch (netErr) {
+      console.error('[Network Error]:', netErr);
+      return { ok: false, status: 0, data: null, error: 'Network connection error. Please try again.' };
+    }
+  }
+
   // Check initial authentication
   if (token) {
     showDashboard();
+    apiFetch('/api/auth/verify').then(res => {
+      if (!res.ok) {
+        // Session expired handled cleanly by apiFetch
+      }
+    });
   } else {
     showLogin();
   }
@@ -329,19 +387,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ===== BIRTHDAYS DATA & CRUD =====
   async function fetchBirthdays() {
-    try {
-      const res = await fetch('/api/birthdays', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.status === 401 || res.status === 403) {
-        logoutBtn.click();
-        return;
-      }
-      birthdays = await res.json();
+    const res = await apiFetch('/api/birthdays');
+    if (res.ok && res.data) {
+      birthdays = res.data;
       updateStats();
       renderBirthdaysTable();
-    } catch (err) {
-      showToast('Could not fetch birthdays', 'error');
+    } else if (res.error && res.status !== 401) {
+      showToast(res.error || 'Could not fetch birthdays', 'error');
     }
   }
 
@@ -491,20 +543,15 @@ document.addEventListener('DOMContentLoaded', () => {
       confirmText: 'Dispatch Email',
       confirmColor: 'linear-gradient(135deg, #EA580C, #F59E0B)',
       onConfirm: async () => {
-        try {
-          const res = await fetch(`/api/birthdays/${bday.id}/send-email`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({})
-          });
-          const data = await res.json();
-          if (res.ok) {
-            showToast(data.message || 'Celebration email dispatched to circle!', 'success');
-          } else {
-            showToast(data.error || 'Failed to dispatch email.', 'error');
-          }
-        } catch (err) {
-          showToast('Error connecting to email service.', 'error');
+        const res = await apiFetch(`/api/birthdays/${bday.id}/send-email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        if (res.ok) {
+          showToast(res.data?.message || 'Celebration email dispatched to circle!', 'success');
+        } else if (res.status !== 401) {
+          showToast(res.error || 'Failed to dispatch email.', 'error');
         }
       }
     });
@@ -518,19 +565,14 @@ document.addEventListener('DOMContentLoaded', () => {
       icon: '🗑️',
       confirmText: 'Delete Celebrant',
       onConfirm: async () => {
-        try {
-          const res = await fetch(`/api/birthdays/${id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          if (res.ok) {
-            showToast('Birthday deleted.', 'success');
-            fetchBirthdays();
-          } else {
-            showToast('Failed to delete birthday.', 'error');
-          }
-        } catch (err) {
-          showToast('Network error.', 'error');
+        const res = await apiFetch(`/api/birthdays/${id}`, {
+          method: 'DELETE'
+        });
+        if (res.ok) {
+          showToast('Birthday deleted.', 'success');
+          fetchBirthdays();
+        } else if (res.status !== 401) {
+          showToast(res.error || 'Failed to delete birthday.', 'error');
         }
       }
     });
@@ -890,41 +932,31 @@ document.addEventListener('DOMContentLoaded', () => {
       formData.append('photo', photoInput.files[0]);
     }
 
-    try {
-      const url = isEdit ? `/api/birthdays/${id}` : '/api/birthdays';
-      const method = isEdit ? 'PUT' : 'POST';
+    const url = isEdit ? `/api/birthdays/${id}` : '/api/birthdays';
+    const method = isEdit ? 'PUT' : 'POST';
 
-      const res = await fetch(url, {
-        method,
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData
-      });
+    const res = await apiFetch(url, {
+      method,
+      body: formData
+    });
 
-      if (res.ok) {
-        showToast(isEdit ? 'Celebrant updated!' : 'Celebrant added!', 'success');
-        closeBirthdayModal();
-        fetchBirthdays();
-      } else {
-        const data = await res.json();
-        showToast(data.error || 'Failed to save birthday.', 'error');
-      }
-    } catch (err) {
-      showToast('Network error.', 'error');
+    if (res.ok) {
+      showToast(isEdit ? 'Celebrant updated!' : 'Celebrant added!', 'success');
+      closeBirthdayModal();
+      fetchBirthdays();
+    } else if (res.status !== 401) {
+      showToast(res.error || 'Failed to save birthday.', 'error');
     }
   });
 
   // ===== AUTO-TRIGGER CIRCLE MEMBERS DIRECTORY =====
   async function fetchCircleMembers() {
-    try {
-      const res = await fetch('/api/circle-members');
-      if (res.ok) {
-        circleMembers = await res.json();
-        if (badgeCircleCount) badgeCircleCount.textContent = circleMembers.length;
-        if (statRecipients) statRecipients.textContent = circleMembers.length;
-        renderCircleMembersTable();
-      }
-    } catch (err) {
-      console.warn('Could not fetch circle members', err);
+    const res = await apiFetch('/api/circle-members');
+    if (res.ok && res.data) {
+      circleMembers = res.data;
+      if (badgeCircleCount) badgeCircleCount.textContent = circleMembers.length;
+      if (statRecipients) statRecipients.textContent = circleMembers.length;
+      renderCircleMembersTable();
     }
   }
 
@@ -966,17 +998,14 @@ document.addEventListener('DOMContentLoaded', () => {
           icon: '🗑️',
           confirmText: 'Remove Member',
           onConfirm: async () => {
-            try {
-              const res = await fetch(`/api/circle-members/${member.id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-              });
-              if (res.ok) {
-                showToast('Member removed from directory.', 'success');
-                fetchCircleMembers();
-              }
-            } catch (e) {
-              showToast('Error removing member.', 'error');
+            const res = await apiFetch(`/api/circle-members/${member.id}`, {
+              method: 'DELETE'
+            });
+            if (res.ok) {
+              showToast('Member removed from directory.', 'success');
+              fetchCircleMembers();
+            } else if (res.status !== 401) {
+              showToast(res.error || 'Error removing member.', 'error');
             }
           }
         });
@@ -994,26 +1023,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (!email) return;
 
-      try {
-        const res = await fetch('/api/circle-members', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ name, email })
-        });
+      const res = await apiFetch('/api/circle-members', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email })
+      });
 
-        const data = await res.json();
-        if (res.ok) {
-          showToast('Circle member added!', 'success');
-          circleMemberForm.reset();
-          fetchCircleMembers();
-        } else {
-          showToast(data.error || 'Failed to add member.', 'error');
-        }
-      } catch (e) {
-        showToast('Network error.', 'error');
+      if (res.ok) {
+        showToast('Circle member added!', 'success');
+        circleMemberForm.reset();
+        fetchCircleMembers();
+      } else if (res.status !== 401) {
+        showToast(res.error || 'Failed to add member.', 'error');
       }
     });
   }
@@ -1026,26 +1047,18 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      try {
-        const res = await fetch('/api/circle-members', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ raw_text: raw })
-        });
+      const res = await apiFetch('/api/circle-members', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ raw_text: raw })
+      });
 
-        const data = await res.json();
-        if (res.ok) {
-          showToast(data.message || 'Circle members ingested!', 'success');
-          memberRawText.value = '';
-          fetchCircleMembers();
-        } else {
-          showToast(data.error || 'Failed to ingest members.', 'error');
-        }
-      } catch (e) {
-        showToast('Network error.', 'error');
+      if (res.ok) {
+        showToast(res.data?.message || 'Circle members ingested!', 'success');
+        memberRawText.value = '';
+        fetchCircleMembers();
+      } else if (res.status !== 401) {
+        showToast(res.error || 'Failed to ingest members.', 'error');
       }
     });
   }
@@ -1238,22 +1251,20 @@ document.addEventListener('DOMContentLoaded', () => {
       executeImportBtn.innerHTML = '<span>Importing...</span>';
 
       try {
-        const res = await fetch('/api/birthdays/bulk-import', {
+        const res = await apiFetch('/api/birthdays/bulk-import', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({ birthdays: parsedBirthdays })
         });
 
-        const data = await res.json();
         if (res.ok) {
-          showToast(data.message || `Successfully processed ${parsedBirthdays.length} celebrant(s)!`, 'success');
+          showToast(res.data?.message || `Successfully processed ${parsedBirthdays.length} celebrant(s)!`, 'success');
           importModal.classList.add('hidden');
           fetchBirthdays();
-        } else {
-          showToast(data.error || 'Import failed.', 'error');
+        } else if (res.status !== 401) {
+          showToast(res.error || 'Import failed.', 'error');
         }
       } catch (err) {
         showToast('Network error during import.', 'error');
@@ -1394,15 +1405,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ===== CIRCLE CHAT MODERATION =====
   async function fetchCircleMessages() {
-    try {
-      const res = await fetch('/api/messages');
-      if (res.ok) {
-        circleMessages = await res.json();
-        if (badgeMessagesCount) badgeMessagesCount.textContent = circleMessages.length;
-        renderMessagesTable();
-      }
-    } catch (err) {
-      console.warn('Could not fetch circle messages', err);
+    const res = await apiFetch('/api/messages');
+    if (res.ok && res.data) {
+      circleMessages = res.data;
+      if (badgeMessagesCount) badgeMessagesCount.textContent = circleMessages.length;
+      renderMessagesTable();
     }
   }
 
@@ -1441,14 +1448,12 @@ document.addEventListener('DOMContentLoaded', () => {
           icon: '🗑️',
           confirmText: 'Delete Message',
           onConfirm: async () => {
-            try {
-              const r = await fetch(`/api/messages/${msg.id}`, { method: 'DELETE' });
-              if (r.ok) {
-                showToast('Message deleted.', 'success');
-                fetchCircleMessages();
-              }
-            } catch (e) {
-              showToast('Error deleting message.', 'error');
+            const r = await apiFetch(`/api/messages/${msg.id}`, { method: 'DELETE' });
+            if (r.ok) {
+              showToast('Message deleted.', 'success');
+              fetchCircleMessages();
+            } else if (r.status !== 401) {
+              showToast(r.error || 'Error deleting message.', 'error');
             }
           }
         });
@@ -1466,15 +1471,12 @@ document.addEventListener('DOMContentLoaded', () => {
         icon: '🧹',
         confirmText: 'Clear All Notes',
         onConfirm: async () => {
-          try {
-            const res = await fetch('/api/messages', { method: 'DELETE' });
-            const data = await res.json();
-            if (res.ok) {
-              showToast(data.message || 'All messages cleared.', 'success');
-              fetchCircleMessages();
-            }
-          } catch (e) {
-            showToast('Error clearing messages.', 'error');
+          const res = await apiFetch('/api/messages', { method: 'DELETE' });
+          if (res.ok) {
+            showToast(res.data?.message || 'All messages cleared.', 'success');
+            fetchCircleMessages();
+          } else if (res.status !== 401) {
+            showToast(res.error || 'Error clearing messages.', 'error');
           }
         }
       });
@@ -1483,16 +1485,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ===== WORKSPACE MEMORIES MODERATION =====
   async function fetchMemoriesList() {
-    try {
-      const res = await fetch('/api/memories');
-      if (res.ok) {
-        memoriesList = await res.json();
-        if (badgeMemoriesCount) badgeMemoriesCount.textContent = memoriesList.length;
-        if (totalMemoriesCount) totalMemoriesCount.textContent = `${memoriesList.length} Total`;
-        renderMemoriesTable();
-      }
-    } catch (err) {
-      console.warn('Could not fetch memories', err);
+    const res = await apiFetch('/api/memories');
+    if (res.ok && res.data) {
+      memoriesList = res.data;
+      if (badgeMemoriesCount) badgeMemoriesCount.textContent = memoriesList.length;
+      if (totalMemoriesCount) totalMemoriesCount.textContent = `${memoriesList.length} Total`;
+      renderMemoriesTable();
     }
   }
 
@@ -1537,16 +1535,12 @@ document.addEventListener('DOMContentLoaded', () => {
           icon: '🗑️',
           confirmText: 'Delete Memory',
           onConfirm: async () => {
-            try {
-              const r = await fetch(`/api/memories/${m.id}`, { method: 'DELETE' });
-              if (r.ok) {
-                showToast('Memory deleted successfully.', 'success');
-                fetchMemoriesList();
-              } else {
-                showToast('Failed to delete memory.', 'error');
-              }
-            } catch (e) {
-              showToast('Network error deleting memory.', 'error');
+            const r = await apiFetch(`/api/memories/${m.id}`, { method: 'DELETE' });
+            if (r.ok) {
+              showToast('Memory deleted successfully.', 'success');
+              fetchMemoriesList();
+            } else if (r.status !== 401) {
+              showToast(r.error || 'Failed to delete memory.', 'error');
             }
           }
         });
@@ -1574,19 +1568,14 @@ document.addEventListener('DOMContentLoaded', () => {
         icon: '🧹',
         confirmText: 'Purge Memories',
         onConfirm: async () => {
-          try {
-            const endpoint = isAll ? '/api/memories/purge/all' : `/api/memories/purge/older-than?days=${selectedVal}`;
-            const res = await fetch(endpoint, { method: 'DELETE' });
-            const data = await res.json();
+          const endpoint = isAll ? '/api/memories/purge/all' : `/api/memories/purge/older-than?days=${selectedVal}`;
+          const res = await apiFetch(endpoint, { method: 'DELETE' });
 
-            if (res.ok) {
-              showToast(data.message || 'Old memories purged successfully.', 'success');
-              fetchMemoriesList();
-            } else {
-              showToast(data.error || 'Failed to purge memories.', 'error');
-            }
-          } catch (err) {
-            showToast('Network error purging memories.', 'error');
+          if (res.ok) {
+            showToast(res.data?.message || 'Old memories purged successfully.', 'success');
+            fetchMemoriesList();
+          } else if (res.status !== 401) {
+            showToast(res.error || 'Failed to purge memories.', 'error');
           }
         }
       });
@@ -1600,35 +1589,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ===== SETTINGS & SMTP DIAGNOSTICS =====
   async function loadSettings() {
-    const activeToken = getActiveToken();
-    if (!activeToken) return;
-    try {
-      const res = await fetch(`/api/settings?token=${encodeURIComponent(activeToken)}`, {
-        headers: { 'Authorization': `Bearer ${activeToken}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        
-        const envStatusBadge = document.getElementById('env-status-badge');
-        const envProviderName = document.getElementById('env-provider-name');
-        const envFromEmail = document.getElementById('env-from-email');
-        const envFromName = document.getElementById('env-from-name');
-        const envKeyPreview = document.getElementById('env-key-preview');
+    const res = await apiFetch('/api/settings');
+    if (res.ok && res.data) {
+      const data = res.data;
+      const envStatusBadge = document.getElementById('env-status-badge');
+      const envProviderName = document.getElementById('env-provider-name');
+      const envFromEmail = document.getElementById('env-from-email');
+      const envFromName = document.getElementById('env-from-name');
+      const envKeyPreview = document.getElementById('env-key-preview');
 
-        if (envProviderName && data.providerLabel) envProviderName.textContent = data.providerLabel;
-        if (envFromEmail && data.from_email) envFromEmail.textContent = data.from_email;
-        if (envFromName && data.from_name) envFromName.textContent = data.from_name;
-        if (envKeyPreview && data.key_preview) envKeyPreview.textContent = data.key_preview;
-        if (envStatusBadge && data.status) envStatusBadge.textContent = data.status.toUpperCase();
-      }
-    } catch (err) {
-      console.warn('Could not load email settings:', err);
+      if (envProviderName && data.providerLabel) envProviderName.textContent = data.providerLabel;
+      if (envFromEmail && data.from_email) envFromEmail.textContent = data.from_email;
+      if (envFromName && data.from_name) envFromName.textContent = data.from_name;
+      if (envKeyPreview && data.key_preview) envKeyPreview.textContent = data.key_preview;
+      if (envStatusBadge && data.status) envStatusBadge.textContent = data.status.toUpperCase();
     }
   }
 
   if (sendTestEmailBtn) {
     sendTestEmailBtn.addEventListener('click', async () => {
-      const activeToken = getActiveToken();
       const targetEmail = testEmailTarget.value.trim();
       if (!targetEmail) {
         showToast('Enter a recipient email to receive the test message.', 'error');
@@ -1638,28 +1617,21 @@ document.addEventListener('DOMContentLoaded', () => {
       sendTestEmailBtn.disabled = true;
       sendTestEmailBtn.innerHTML = '<span>Sending...</span>';
 
-      try {
-        const res = await fetch(`/api/settings/test-email?token=${encodeURIComponent(activeToken)}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${activeToken}`
-          },
-          body: JSON.stringify({ target_email: targetEmail })
-        });
+      const res = await apiFetch('/api/settings/test-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ target_email: targetEmail })
+      });
 
-        const data = await res.json();
-        if (res.ok) {
-          showToast(data.message || 'Test email dispatched successfully!', 'success');
-        } else {
-          showToast(data.error || 'Failed to dispatch test email.', 'error');
-        }
-      } catch (err) {
-        console.error('[Test Email Error]:', err);
-        showToast(err.message || 'Could not connect to SMTP service.', 'error');
-      } finally {
-        sendTestEmailBtn.disabled = false;
-        sendTestEmailBtn.innerHTML = '<span>📨 Dispatch Test Email</span>';
+      sendTestEmailBtn.disabled = false;
+      sendTestEmailBtn.innerHTML = '<span>📨 Dispatch Test Email</span>';
+
+      if (res.ok) {
+        showToast(res.data?.message || 'Test email dispatched successfully!', 'success');
+      } else if (res.status !== 401) {
+        showToast(res.error || 'Failed to dispatch test email.', 'error');
       }
     });
   }
