@@ -66,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const circleBroadcastCancelBtn = document.getElementById('circle-broadcast-cancel-btn');
   const circleBroadcastForm = document.getElementById('circle-broadcast-form');
   const broadcastCelebrantSelect = document.getElementById('broadcast-celebrant-select');
+  const broadcastTypeSelect = document.getElementById('broadcast-type-select');
   const broadcastCustomNote = document.getElementById('broadcast-custom-note');
   const broadcastRecipientBadge = document.getElementById('broadcast-recipient-badge');
   const circleBroadcastSubmitBtn = document.getElementById('circle-broadcast-submit-btn');
@@ -1073,6 +1074,42 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ===== MANUAL CIRCLE CELEBRATION BROADCAST DISPATCH =====
+  function getSelectedBroadcastBirthday() {
+    if (!broadcastCelebrantSelect) return null;
+    const selectedId = parseInt(broadcastCelebrantSelect.value, 10);
+    return birthdays.find(b => b.id === selectedId) || null;
+  }
+
+  function updateBroadcastTypeOptions() {
+    if (!broadcastTypeSelect) return;
+    const bday = getSelectedBroadcastBirthday();
+    if (!bday) return;
+
+    const configuredDays = bday.remind_days_before !== undefined ? bday.remind_days_before : 2;
+    const isToday = bday.days_until === 0;
+
+    broadcastTypeSelect.innerHTML = `
+      <option value="2">⏰ 2-Day Advance Alert ("Upcoming in 2 Days — Plan Wishes")</option>
+      <option value="1">⏰ 1-Day Advance Alert ("Upcoming Tomorrow — Final Reminder")</option>
+      <option value="configured">⏰ Configured Advance Alert (${configuredDays} Days Before for ${escapeHtml(bday.name)})</option>
+      <option value="0">🎉 Today's Birthday Celebration ("Happy Birthday Today!")</option>
+      <option value="actual">🗓️ Actual Calendar Countdown (In ${bday.days_until} Days • ${formatDate(bday.date)})</option>
+    `;
+
+    // Smart default selection
+    if (isToday) {
+      broadcastTypeSelect.value = '0';
+    } else if (bday.days_until === 2) {
+      broadcastTypeSelect.value = '2';
+    } else if (bday.days_until === 1) {
+      broadcastTypeSelect.value = '1';
+    } else if (configuredDays) {
+      broadcastTypeSelect.value = 'configured';
+    } else {
+      broadcastTypeSelect.value = '2';
+    }
+  }
+
   function openCircleBroadcastModal() {
     if (!birthdays || birthdays.length === 0) {
       showToast('No celebrants found in the workspace. Please add a birthday first.', 'warning');
@@ -1111,6 +1148,8 @@ document.addEventListener('DOMContentLoaded', () => {
         opt.textContent = `${prefix} ${b.name}${countdownText}`;
         broadcastCelebrantSelect.appendChild(opt);
       });
+
+      updateBroadcastTypeOptions();
     }
 
     if (broadcastCustomNote) broadcastCustomNote.value = '';
@@ -1119,6 +1158,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function closeCircleBroadcastModal() {
     if (circleBroadcastModal) circleBroadcastModal.classList.add('hidden');
+  }
+
+  if (broadcastCelebrantSelect) {
+    broadcastCelebrantSelect.addEventListener('change', updateBroadcastTypeOptions);
   }
 
   if (openCircleBroadcastBtn) {
@@ -1138,10 +1181,24 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const birthdayId = broadcastCelebrantSelect ? broadcastCelebrantSelect.value : null;
       const customMessage = broadcastCustomNote ? broadcastCustomNote.value.trim() : '';
+      const selectedBday = getSelectedBroadcastBirthday();
 
-      if (!birthdayId) {
+      if (!birthdayId || !selectedBday) {
         showToast('Please select a birthday celebrant.', 'error');
         return;
+      }
+
+      // Determine days_until to send
+      let daysUntilToSend = selectedBday.days_until;
+      if (broadcastTypeSelect) {
+        const typeVal = broadcastTypeSelect.value;
+        if (typeVal === 'configured') {
+          daysUntilToSend = selectedBday.remind_days_before !== undefined ? selectedBday.remind_days_before : 2;
+        } else if (typeVal === 'actual') {
+          daysUntilToSend = selectedBday.days_until;
+        } else {
+          daysUntilToSend = parseInt(typeVal, 10);
+        }
       }
 
       if (circleBroadcastSubmitBtn) {
@@ -1156,6 +1213,7 @@ document.addEventListener('DOMContentLoaded', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             birthday_id: birthdayId,
+            days_until: daysUntilToSend,
             custom_message: customMessage || undefined
           })
         });

@@ -741,8 +741,20 @@
             </select>
           </div>
 
+          <!-- Select Email Notification Type / Advance Timing -->
+          <div class="input-group full-width" style="margin-top: 14px;">
+            <label for="broadcast-type-select" style="font-weight: 700; color: var(--text-heading); display: block; margin-bottom: 6px;">Email Type / Advance Timing *</label>
+            <select id="broadcast-type-select" required style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-card); font-weight: 600; color: var(--text-heading); font-size: 0.9rem;">
+              <option value="2">⏰ 2-Day Advance Alert ("Upcoming Birthday in 2 Days — Plan Wishes")</option>
+              <option value="1">⏰ 1-Day Advance Alert ("Upcoming Tomorrow — Final Reminder")</option>
+              <option value="configured">⏰ Configured Advance Alert (Celebrant's preset days)</option>
+              <option value="0">🎉 Today's Birthday Celebration ("Happy Birthday Today!")</option>
+              <option value="actual">🗓️ Actual Countdown (Based on calendar days remaining)</option>
+            </select>
+          </div>
+
           <!-- Optional Custom Personal Note -->
-          <div class="input-group full-width" style="margin-top: 16px;">
+          <div class="input-group full-width" style="margin-top: 14px;">
             <label for="broadcast-custom-note" style="font-weight: 600; color: var(--text-heading); display: block; margin-bottom: 6px;">Personal / Custom Note for Circle (Optional)</label>
             <textarea id="broadcast-custom-note" rows="3" placeholder="Leave empty to use the standard high-end executive template, or add a custom greeting for the circle..."></textarea>
           </div>

@@ -73,7 +73,7 @@ const emailService = require('../services/emailService');
 // POST trigger manual celebration email for upcoming/selected celebrant to all circle members
 router.post('/trigger-broadcast', authenticateToken, async (req, res) => {
   try {
-    let { birthday_id, custom_message } = req.body;
+    let { birthday_id, custom_message, days_until } = req.body;
     let birthday = null;
 
     if (birthday_id) {
@@ -91,7 +91,14 @@ router.post('/trigger-broadcast', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'No celebrants found in the workspace. Please add a birthday first.' });
     }
 
-    const daysUntil = emailService.calculateDaysUntil(birthday.date);
+    let daysUntil = emailService.calculateDaysUntil(birthday.date);
+    if (days_until !== undefined && days_until !== null && days_until !== '') {
+      const parsedDays = parseInt(days_until, 10);
+      if (!isNaN(parsedDays)) {
+        daysUntil = parsedDays;
+      }
+    }
+
     const result = await emailService.sendBirthdayReminder(birthday, [], daysUntil, custom_message || null);
 
     if (result.success) {
