@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 200" width="600" height="200">
+  <defs>
+    <linearGradient id="advBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EEF2FF"/>
+      <stop offset="50%" stop-color="#F5F3FF"/>
+      <stop offset="100%" stop-color="#FDF2F8"/>
+    </linearGradient>
+    <linearGradient id="advText" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4338CA"/>
+      <stop offset="50%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="600" height="200" fill="url(#advBg)"/>
+
+  <!-- Confetti sprinkles -->
+  <rect x="70" y="40" width="7" height="16" rx="3" transform="rotate(30 70 40)" fill="#6366F1"/>
+  <rect x="120" y="80" width="6" height="14" rx="3" transform="rotate(-20 120 80)" fill="#EC4899"/>
+  <rect x="85" y="140" width="7" height="15" rx="3" transform="rotate(45 85 140)" fill="#F59E0B"/>
+  <rect x="440" y="35" width="7" height="16" rx="3" transform="rotate(-25 440 35)" fill="#10B981"/>
+  <rect x="500" y="70" width="6" height="14" rx="3" transform="rotate(35 500 70)" fill="#6366F1"/>
+  <rect x="530" y="130" width="7" height="15" rx="3" transform="rotate(-50 530 130)" fill="#EC4899"/>
+
+  <circle cx="55" cy="95" r="4" fill="#F59E0B"/>
+  <circle cx="160" cy="115" r="3.5" fill="#6366F1"/>
+  <circle cx="460" cy="120" r="3.5" fill="#F59E0B"/>
+  <circle cx="540" cy="90" r="4" fill="#10B981"/>
+
+  <!-- Top Badge -->
+  <g transform="translate(190, 20)">
+    <rect width="220" height="28" rx="14" fill="#FFFFFF" stroke="rgba(99, 102, 241, 0.25)" stroke-width="1.5"/>
+    <text x="110" y="18" fill="#4338CA" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="800" text-anchor="middle" letter-spacing="1.5">⏰ ADVANCE HEADS-UP</text>
+  </g>
+
+  <!-- Headline -->
+  <g transform="translate(300, 105)">
+    <text x="0" y="0" fill="url(#advText)" font-family="'Playfair Display', Georgia, serif" font-size="38" font-weight="800" text-anchor="middle" letter-spacing="-0.5">
+      Upcoming Celebration!
+    </text>
+  </g>
+
+  <!-- Cheerful Underline -->
+  <path d="M 230 128 Q 300 144 370 128" fill="none" stroke="#F59E0B" stroke-width="3.5" stroke-linecap="round"/>
+
+  <!-- Subtitle -->
+  <text x="300" y="165" fill="#64748B" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="600" text-anchor="middle" letter-spacing="0.4">
+    🗓️ MARK YOUR CALENDAR &amp; PREPARE YOUR WISHES
+  </text>
+</svg>

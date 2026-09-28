@@ -258,7 +258,7 @@ function generateBirthdayPersonWishEmailHtml(birthday, customMessage = null) {
   const chatUrl = `${baseUrl}/chat`;
   const memoriesUrl = `${baseUrl}/memories`;
   const homeUrl = `${baseUrl}/`;
-  const wishBody = customMessage || `On behalf of the entire Zenitude Circle, we wish you a joyous and fulfilling birthday. May this upcoming milestone year bring you robust health, inspiring breakthroughs, enduring happiness, and the continued warmth of friends, family, and colleagues.`;
+  const wishBody = customMessage || `On behalf of the entire Zenitude Circle, we wish you a joyous and fulfilling birthday! May this upcoming milestone year bring you robust health, inspiring breakthroughs, enduring happiness, and the continued warmth of friends, family, and colleagues.`;
   const notesText = birthday.notes ? birthday.notes.trim() : '';
 
   let photoSrc = null;
@@ -298,10 +298,10 @@ function generateBirthdayPersonWishEmailHtml(birthday, customMessage = null) {
     @media only screen and (max-width: 620px) {
       .email-outer-td { padding: 12px 6px !important; }
       .email-main-table { width: 100% !important; max-width: 100% !important; border-radius: 16px !important; }
-      .header-cell { padding: 24px 20px 18px 20px !important; }
-      .content-cell { padding: 26px 20px 22px 20px !important; }
-      .spotlight-padding-td { padding: 18px 16px !important; }
-      .footer-cell { padding: 22px 20px !important; }
+      .header-cell { padding: 20px 18px 16px 18px !important; }
+      .content-cell { padding: 24px 18px 20px 18px !important; }
+      .spotlight-padding-td { padding: 18px 14px !important; }
+      .footer-cell { padding: 20px 18px !important; }
       .brand-title { font-size: 20px !important; }
       .badge-tag { font-size: 9.5px !important; padding: 3px 7px !important; }
       .header-date-text { font-size: 11.5px !important; }
@@ -335,13 +335,20 @@ function generateBirthdayPersonWishEmailHtml(birthday, customMessage = null) {
             <td height="6" style="background: linear-gradient(90deg, #FF6B6B 0%, #FF8E53 35%, #FFA41B 70%, #F43F5E 100%);"></td>
           </tr>
 
+          <!-- High-Res Festive Hero Celebration Banner Artwork -->
+          <tr>
+            <td align="center" style="padding: 0; background-color: #FFF5F5; line-height: 0;">
+              <img src="${baseUrl}/images/email-celebration-banner.svg" alt="Happy Birthday Celebration!" width="600" style="display: block; width: 100%; max-width: 600px; height: auto; border: 0;" />
+            </td>
+          </tr>
+
           <!-- Letterhead Header -->
           <tr>
-            <td class="header-cell" style="padding: 30px 38px 22px 38px; border-bottom: 1px solid #F1F5F9; background: linear-gradient(180deg, #FFFFFF 0%, #FAF5FF 100%);">
+            <td class="header-cell" style="padding: 24px 38px 20px 38px; border-bottom: 1px solid #F1F5F9; background: linear-gradient(180deg, #FFFFFF 0%, #FAF5FF 100%);">
               <table border="0" cellpadding="0" cellspacing="0" width="100%">
                 <tr>
                   <td valign="middle">
-                    <span class="brand-title" style="font-family: Georgia, 'Playfair Display', serif; font-size: 24px; font-weight: 800; color: #0F172A; letter-spacing: -0.2px;">Zenitude</span>
+                    <span class="brand-title" style="font-family: Georgia, 'Playfair Display', serif; font-size: 22px; font-weight: 800; color: #0F172A; letter-spacing: -0.2px;">Zenitude</span>
                     <span class="badge-tag" style="display: inline-block; margin-left: 8px; background: #FFE4E6; color: #E11D48; font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 6px; letter-spacing: 0.8px; text-transform: uppercase; border: 1px solid rgba(225,29,72,0.15);">👑 VIP CELEBRATION</span>
                   </td>
                   <td align="right" valign="middle" class="header-date-text" style="font-size: 13px; color: #64748B; font-weight: 600;">
@@ -354,11 +361,11 @@ function generateBirthdayPersonWishEmailHtml(birthday, customMessage = null) {
 
           <!-- Main Letter Content -->
           <tr>
-            <td class="content-cell" style="padding: 34px 38px 26px 38px;">
+            <td class="content-cell" style="padding: 30px 38px 26px 38px;">
               
               <!-- Salutation -->
               <h1 class="salutation-title" style="font-size: 24px; font-weight: 800; color: #0F172A; margin: 0 0 14px 0; letter-spacing: -0.4px;">
-                Happy Birthday, ${celebrantName}! 🎉
+                Happy Birthday, ${celebrantName}! 🎉🎂
               </h1>
 
               <p style="font-size: 15.5px; color: #334155; margin: 0 0 20px 0; line-height: 1.75;">
@@ -491,6 +498,14 @@ function generateCircleIntimationEmailHtml(birthday, daysUntil, recipientName = 
     ? `Today We Celebrate ${celebrantName}'s Birthday!` 
     : `Upcoming: ${celebrantName}'s Birthday in ${daysUntil} Days (${formattedDate})`;
 
+  const bannerImgSrc = isToday
+    ? `${baseUrl}/images/email-celebration-banner.svg`
+    : `${baseUrl}/images/email-advance-banner.svg`;
+
+  const bannerAlt = isToday
+    ? `Happy Birthday ${celebrantName}!`
+    : `Upcoming Birthday Heads-Up for ${celebrantName}`;
+
   const occasionBadge = isToday
     ? `<span class="badge-tag" style="display: inline-block; background: #DCFCE7; color: #15803D; font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 6px; letter-spacing: 0.8px; text-transform: uppercase; border: 1px solid rgba(21,128,61,0.2);">🎉 TODAY'S CELEBRATION</span>`
     : `<span class="badge-tag" style="display: inline-block; background: #EEF2FF; color: #4338CA; font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 6px; letter-spacing: 0.8px; text-transform: uppercase; border: 1px solid rgba(67,56,202,0.2);">⏰ ${daysUntil}-DAY ADVANCE HEADS-UP</span>`;
@@ -573,10 +588,10 @@ function generateCircleIntimationEmailHtml(birthday, daysUntil, recipientName = 
     @media only screen and (max-width: 620px) {
       .email-outer-td { padding: 12px 6px !important; }
       .email-main-table { width: 100% !important; max-width: 100% !important; border-radius: 16px !important; }
-      .header-cell { padding: 24px 20px 18px 20px !important; }
-      .content-cell { padding: 26px 20px 22px 20px !important; }
-      .spotlight-padding-td { padding: 18px 16px !important; }
-      .footer-cell { padding: 22px 20px !important; }
+      .header-cell { padding: 20px 18px 16px 18px !important; }
+      .content-cell { padding: 24px 18px 20px 18px !important; }
+      .spotlight-padding-td { padding: 18px 14px !important; }
+      .footer-cell { padding: 20px 18px !important; }
       .brand-title { font-size: 20px !important; }
       .badge-tag { font-size: 9.5px !important; padding: 3px 7px !important; }
       .header-date-text { font-size: 11.5px !important; }
@@ -610,13 +625,20 @@ function generateCircleIntimationEmailHtml(birthday, daysUntil, recipientName = 
             <td height="6" style="background: linear-gradient(90deg, #4F46E5 0%, #06B6D4 50%, #10B981 100%);"></td>
           </tr>
 
+          <!-- High-Res Festive Hero Banner Artwork -->
+          <tr>
+            <td align="center" style="padding: 0; background-color: #EEF2FF; line-height: 0;">
+              <img src="${bannerImgSrc}" alt="${bannerAlt}" width="600" style="display: block; width: 100%; max-width: 600px; height: auto; border: 0;" />
+            </td>
+          </tr>
+
           <!-- Letterhead Header -->
           <tr>
-            <td class="header-cell" style="padding: 30px 38px 22px 38px; border-bottom: 1px solid #F1F5F9; background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);">
+            <td class="header-cell" style="padding: 24px 38px 20px 38px; border-bottom: 1px solid #F1F5F9; background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);">
               <table border="0" cellpadding="0" cellspacing="0" width="100%">
                 <tr>
                   <td valign="middle">
-                    <span class="brand-title" style="font-family: Georgia, 'Playfair Display', serif; font-size: 24px; font-weight: 800; color: #0F172A; letter-spacing: -0.2px;">Zenitude</span>
+                    <span class="brand-title" style="font-family: Georgia, 'Playfair Display', serif; font-size: 22px; font-weight: 800; color: #0F172A; letter-spacing: -0.2px;">Zenitude</span>
                     <span style="margin-left: 8px;">${occasionBadge}</span>
                   </td>
                   <td align="right" valign="middle" class="header-date-text" style="font-size: 13px; color: #64748B; font-weight: 600;">
@@ -629,7 +651,7 @@ function generateCircleIntimationEmailHtml(birthday, daysUntil, recipientName = 
 
           <!-- Main Letter Content -->
           <tr>
-            <td class="content-cell" style="padding: 34px 38px 26px 38px;">
+            <td class="content-cell" style="padding: 30px 38px 26px 38px;">
               
               <!-- Salutation with Recipient's Name -->
               <h2 class="salutation-title" style="font-size: 21px; font-weight: 800; color: #0F172A; margin: 0 0 14px 0; letter-spacing: -0.3px;">
@@ -715,8 +737,6 @@ function generateCircleIntimationEmailHtml(birthday, daysUntil, recipientName = 
                 </tr>
               </table>
             </td>
-          </tr>
-
         </table>
 
       </td>
