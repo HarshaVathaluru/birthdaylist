@@ -276,10 +276,15 @@
 
       <!-- AUTO-TRIGGER CIRCLE MEMBERS SECTION -->
       <section id="circle-section" class="content-section hidden">
-        <div class="section-banner">
-          <div class="section-banner-text">
+        <div class="section-banner" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
+          <div class="section-banner-text" style="max-width: 620px;">
             <h3>👥 Auto-Trigger Notification Directory</h3>
             <p>Add your circle members here. Whenever ANY birthday arrives, celebratory emails are automatically dispatched to everyone in this list. No need to add emails per person!</p>
+          </div>
+          <div class="section-banner-actions">
+            <button type="button" class="btn-primary" id="open-circle-broadcast-btn" style="background: linear-gradient(135deg, #EA580C, #F59E0B); padding: 11px 20px; font-weight: 700; font-size: 0.9rem; border-radius: 12px; box-shadow: 0 4px 16px rgba(234, 88, 12, 0.35); display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+              <span>📨 Send Celebration Mail to Circle</span>
+            </button>
           </div>
         </div>
 
@@ -699,6 +704,63 @@
           <span>Execute Import</span>
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- MANUAL CIRCLE CELEBRATION BROADCAST MODAL -->
+  <div id="circle-broadcast-modal" class="modal-overlay hidden">
+    <div class="modal-card" style="max-width: 560px; width: 95%;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 1.6rem;">📨</span>
+          <div>
+            <h3 style="margin: 0; font-size: 1.15rem;">Dispatch Circle Celebration Email</h3>
+            <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: var(--text-muted);">Manually send the celebration email for the upcoming birthday person to all directory members.</p>
+          </div>
+        </div>
+        <button class="modal-close" id="circle-broadcast-close">&times;</button>
+      </div>
+
+      <form id="circle-broadcast-form">
+        <div class="modal-body" style="padding: 20px 24px;">
+          
+          <!-- Recipient summary banner -->
+          <div style="background: rgba(234, 88, 12, 0.08); border: 1px solid rgba(234, 88, 12, 0.2); border-radius: 12px; padding: 12px 16px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <div style="font-weight: 700; color: #EA580C; font-size: 0.88rem;">👥 Target Recipients</div>
+              <div style="font-size: 0.78rem; color: var(--dark-soft); margin-top: 2px;">Dispatches to all active members in Auto-Trigger Notification Directory</div>
+            </div>
+            <span id="broadcast-recipient-badge" style="background: #EA580C; color: #fff; font-weight: 800; font-size: 0.78rem; padding: 4px 10px; border-radius: 20px;">0 Members</span>
+          </div>
+
+          <!-- Select Celebrant (Sorted by Nearest Upcoming First) -->
+          <div class="input-group full-width">
+            <label for="broadcast-celebrant-select" style="font-weight: 700; color: var(--text-heading); display: block; margin-bottom: 6px;">Select Birthday Person *</label>
+            <select id="broadcast-celebrant-select" required style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-card); font-weight: 600; color: var(--text-heading); font-size: 0.9rem;">
+              <!-- Populated dynamically by JS -->
+            </select>
+          </div>
+
+          <!-- Optional Custom Personal Note -->
+          <div class="input-group full-width" style="margin-top: 16px;">
+            <label for="broadcast-custom-note" style="font-weight: 600; color: var(--text-heading); display: block; margin-bottom: 6px;">Personal / Custom Note for Circle (Optional)</label>
+            <textarea id="broadcast-custom-note" rows="3" placeholder="Leave empty to use the standard high-end executive template, or add a custom greeting for the circle..."></textarea>
+          </div>
+
+          <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 10px; line-height: 1.45; background: rgba(0,0,0,0.02); padding: 8px 12px; border-radius: 8px;">
+            💡 <em><strong>How it works:</strong> The celebrant receives the tailored VIP Wish, while all other members receive the Circle Celebration Alert, exactly matching the automated 07:00 AM engine.</em>
+          </div>
+
+        </div>
+
+        <div class="modal-footer" style="padding: 14px 24px;">
+          <button type="button" class="btn-secondary" id="circle-broadcast-cancel-btn">Cancel</button>
+          <button type="submit" class="btn-primary" id="circle-broadcast-submit-btn" style="background: linear-gradient(135deg, #EA580C, #F59E0B); min-width: 180px;">
+            <span class="btn-text">🚀 Dispatch to All Members</span>
+            <span class="spinner hidden" style="margin-left: 6px;">⏳</span>
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 

@@ -68,15 +68,59 @@ router.post('/', authenticateToken, (req, res) => {
   }
 });
 
+const emailService = require('../services/emailService');
+
+// POST trigger manual celebration email for upcoming/selected celebrant to all circle members
+router.post('/trigger-broadcast', authenticateToken, async (req, res) => {
+  try {
+    let { birthday_id, custom_message } = req.body;
+    let birthday = null;
+
+    if (birthday_id) {
+      birthday = db.prepare('SELECT * FROM birthdays WHERE id = ?').get(birthday_id);
+    } else {
+      // Find the nearest upcoming / today's birthday
+      const allBirthdays = db.prepare('SELECT * FROM birthdays WHERE reminder_enabled = 1').all();
+      if (allBirthdays.length > 0) {
+        allBirthdays.sort((a, b) => emailService.calculateDaysUntil(a.date) - emailService.calculateDaysUntil(b.date));
+        birthday = allBirthdays[0];
+      }
+    }
+
+    if (!birthday) {
+      return res.status(404).json({ error: 'No celebrants found in the workspace. Please add a birthday first.' });
+    }
+
+    const daysUntil = emailService.calculateDaysUntil(birthday.date);
+    const result = await emailService.sendBirthdayReminder(birthday, [], daysUntil, custom_message || null);
+
+    if (result.success) {
+      const statusLabel = daysUntil === 0 ? "Today's Birthday" : `in ${daysUntil} day${daysUntil !== 1 ? 's' : ''}`;
+      res.json({
+        success: true,
+        message: `Celebration email for ${birthday.name} (${statusLabel}) dispatched to ${result.recipientCount} circle recipient(s)!`,
+        recipientCount: result.recipientCount,
+        celebrant: birthday.name,
+        daysUntil: daysUntil
+      });
+    } else {
+      res.status(500).json({ error: result.error || 'Failed to dispatch emails to circle directory.' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // DELETE circle member
 router.delete('/:id', authenticateToken, (req, res) => {
   try {
     db.prepare('DELETE FROM circle_members WHERE id = ?').run(req.params.id);
-    res.json({ success: true });
+    res.json({ success: true, message: 'Member deleted from circle directory' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 module.exports = router;
+
 

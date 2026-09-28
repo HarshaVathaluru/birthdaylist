@@ -60,6 +60,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const circleEmptyState = document.getElementById('circle-empty-state');
   const saveBatchMembersBtn = document.getElementById('save-batch-members-btn');
   const memberRawText = document.getElementById('member_raw_text');
+  const openCircleBroadcastBtn = document.getElementById('open-circle-broadcast-btn');
+  const circleBroadcastModal = document.getElementById('circle-broadcast-modal');
+  const circleBroadcastClose = document.getElementById('circle-broadcast-close');
+  const circleBroadcastCancelBtn = document.getElementById('circle-broadcast-cancel-btn');
+  const circleBroadcastForm = document.getElementById('circle-broadcast-form');
+  const broadcastCelebrantSelect = document.getElementById('broadcast-celebrant-select');
+  const broadcastCustomNote = document.getElementById('broadcast-custom-note');
+  const broadcastRecipientBadge = document.getElementById('broadcast-recipient-badge');
+  const circleBroadcastSubmitBtn = document.getElementById('circle-broadcast-submit-btn');
 
   // Import / Export
   const exportCsvBtn = document.getElementById('export-csv-btn');
@@ -1059,6 +1068,112 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchCircleMembers();
       } else if (res.status !== 401) {
         showToast(res.error || 'Failed to ingest members.', 'error');
+      }
+    });
+  }
+
+  // ===== MANUAL CIRCLE CELEBRATION BROADCAST DISPATCH =====
+  function openCircleBroadcastModal() {
+    if (!birthdays || birthdays.length === 0) {
+      showToast('No celebrants found in the workspace. Please add a birthday first.', 'warning');
+      return;
+    }
+
+    if (!circleMembers || circleMembers.length === 0) {
+      showToast('No circle members in directory. Please add members first.', 'warning');
+      return;
+    }
+
+    if (broadcastRecipientBadge) {
+      broadcastRecipientBadge.textContent = `${circleMembers.length} Member${circleMembers.length !== 1 ? 's' : ''}`;
+    }
+
+    if (broadcastCelebrantSelect) {
+      broadcastCelebrantSelect.innerHTML = '';
+      
+      // Sort birthdays by days_until ascending (Today / nearest upcoming first)
+      const sortedBirthdays = [...birthdays].sort((a, b) => (a.days_until ?? 999) - (b.days_until ?? 999));
+      
+      sortedBirthdays.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b.id;
+        let prefix = '🗓️';
+        let countdownText = '';
+        if (b.days_until === 0) {
+          prefix = '🎂';
+          countdownText = ' — (TODAY!)';
+        } else if (b.days_until > 0 && b.days_until <= 7) {
+          prefix = '⏳';
+          countdownText = ` — (In ${b.days_until} day${b.days_until !== 1 ? 's' : ''})`;
+        } else {
+          countdownText = ` — (${formatDate(b.date)} • in ${b.days_until}d)`;
+        }
+        opt.textContent = `${prefix} ${b.name}${countdownText}`;
+        broadcastCelebrantSelect.appendChild(opt);
+      });
+    }
+
+    if (broadcastCustomNote) broadcastCustomNote.value = '';
+    if (circleBroadcastModal) circleBroadcastModal.classList.remove('hidden');
+  }
+
+  function closeCircleBroadcastModal() {
+    if (circleBroadcastModal) circleBroadcastModal.classList.add('hidden');
+  }
+
+  if (openCircleBroadcastBtn) {
+    openCircleBroadcastBtn.addEventListener('click', openCircleBroadcastModal);
+  }
+
+  if (circleBroadcastClose) {
+    circleBroadcastClose.addEventListener('click', closeCircleBroadcastModal);
+  }
+
+  if (circleBroadcastCancelBtn) {
+    circleBroadcastCancelBtn.addEventListener('click', closeCircleBroadcastModal);
+  }
+
+  if (circleBroadcastForm) {
+    circleBroadcastForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const birthdayId = broadcastCelebrantSelect ? broadcastCelebrantSelect.value : null;
+      const customMessage = broadcastCustomNote ? broadcastCustomNote.value.trim() : '';
+
+      if (!birthdayId) {
+        showToast('Please select a birthday celebrant.', 'error');
+        return;
+      }
+
+      if (circleBroadcastSubmitBtn) {
+        circleBroadcastSubmitBtn.disabled = true;
+        const spinner = circleBroadcastSubmitBtn.querySelector('.spinner');
+        if (spinner) spinner.classList.remove('hidden');
+      }
+
+      try {
+        const res = await apiFetch('/api/circle-members/trigger-broadcast', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            birthday_id: birthdayId,
+            custom_message: customMessage || undefined
+          })
+        });
+
+        if (res.ok) {
+          showToast(res.data?.message || 'Celebration email dispatched to all circle directory members!', 'success');
+          closeCircleBroadcastModal();
+        } else if (res.status !== 401) {
+          showToast(res.error || 'Failed to dispatch emails.', 'error');
+        }
+      } catch (err) {
+        showToast('Network error dispatching emails.', 'error');
+      } finally {
+        if (circleBroadcastSubmitBtn) {
+          circleBroadcastSubmitBtn.disabled = false;
+          const spinner = circleBroadcastSubmitBtn.querySelector('.spinner');
+          if (spinner) spinner.classList.add('hidden');
+        }
       }
     });
   }
