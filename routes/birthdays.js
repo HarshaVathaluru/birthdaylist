@@ -355,6 +355,26 @@ router.delete('/:id', authenticateToken, (req, res) => {
   }
 });
 
+// GET/POST trigger the automated daily 7 AM check on-demand (used by cron, external webhooks, or admin test)
+router.all('/run-cron', async (req, res) => {
+  try {
+    const result = await emailService.runDailyBirthdayCheck();
+    if (result.success) {
+      res.json({
+        success: true,
+        message: `Daily birthday reminder check completed. Dispatched alerts for ${result.celebrantCount || 0} celebrant(s) (${result.sentCount || 0} emails).`,
+        celebrantCount: result.celebrantCount || 0,
+        sentCount: result.sentCount || 0,
+        triggered: result.triggered || []
+      });
+    } else {
+      res.status(500).json({ success: false, error: result.error });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // POST send birthday email with rich HTML template to recipients
 router.post('/:id/send-email', async (req, res) => {
   const id = req.params.id;

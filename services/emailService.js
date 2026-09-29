@@ -39,7 +39,7 @@ function getEmailConfig() {
     port: parseInt(settingsObj.smtp_port || process.env.SMTP_PORT || '465', 10),
     user: (settingsObj.smtp_user || process.env.SMTP_USER || '').trim(),
     pass: (settingsObj.smtp_pass || process.env.SMTP_PASS || '').trim(),
-    masterReminder: settingsObj.master_reminder !== 'false'
+    masterReminder: settingsObj.master_reminder !== 'false' && settingsObj.reminders_enabled !== 'false'
   };
 }
 
@@ -1074,7 +1074,19 @@ function calculateDaysUntil(dateStr) {
   today.setHours(0, 0, 0, 0);
   
   const norm = normalizeDateStr(dateStr);
-  const [month, day] = norm.split('-').map(Number);
+  const parts = norm.split('-').map(Number);
+  let month, day;
+  if (parts.length === 3) {
+    // Format: YYYY-MM-DD
+    month = parts[1];
+    day = parts[2];
+  } else if (parts.length === 2) {
+    // Format: MM-DD
+    month = parts[0];
+    day = parts[1];
+  } else {
+    return 999;
+  }
   
   let nextBday = new Date(today.getFullYear(), month - 1, day);
   nextBday.setHours(0, 0, 0, 0);
@@ -1089,36 +1101,60 @@ function calculateDaysUntil(dateStr) {
 }
 
 // ============================================================================
-// AUTOMATED CRON SCHEDULE (Runs daily at 07:00 AM)
+// AUTOMATED DAILY BIRTHDAY CHECK & CRON DISPATCH
 // ============================================================================
+async function runDailyBirthdayCheck() {
+  const config = getEmailConfig();
+  if (!config.masterReminder) {
+    console.log('[Daily Check] Master reminders are disabled in settings. Skipping.');
+    return { success: true, message: 'Master reminders disabled in settings', sentCount: 0 };
+  }
+
+  try {
+    const birthdays = db.prepare('SELECT * FROM birthdays WHERE reminder_enabled = 1').all();
+    let totalSent = 0;
+    const triggeredList = [];
+
+    console.log(`[Daily Check] Evaluating ${birthdays.length} active celebrant(s) for notifications...`);
+
+    for (const birthday of birthdays) {
+      const daysUntil = calculateDaysUntil(birthday.date);
+      const targetAlertDays = parseInt(birthday.remind_days_before !== undefined ? birthday.remind_days_before : 2, 10);
+      
+      // Trigger on the configured advance alert days (e.g. 2, 3, 5 days) or today (0 days)
+      if (daysUntil === targetAlertDays || daysUntil === 0) {
+        const typeLabel = daysUntil === 0 ? "Today's Celebration" : `${targetAlertDays}-Day Advance Heads-Up`;
+        console.log(`[Daily Check] 🚀 Triggering ${typeLabel} for ${birthday.name} (${birthday.date})...`);
+        
+        const res = await sendBirthdayReminder(birthday, [], daysUntil);
+        if (res && res.success) {
+          totalSent += (res.recipientCount || 1);
+          triggeredList.push({ name: birthday.name, date: birthday.date, daysUntil, count: res.recipientCount });
+        } else {
+          console.error(`[Daily Check Error] Failed to send reminder for ${birthday.name}:`, res ? res.error : 'Unknown error');
+        }
+      }
+    }
+
+    console.log(`[Daily Check Finished] Processed ${triggeredList.length} celebrant alert(s), total emails dispatched: ${totalSent}`);
+    return {
+      success: true,
+      celebrantCount: triggeredList.length,
+      sentCount: totalSent,
+      triggered: triggeredList
+    };
+  } catch (error) {
+    console.error('[Daily Check Exception]:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 function startCronJob() {
   const cronTimezone = process.env.TIMEZONE || process.env.TZ || 'Asia/Kolkata';
   // Run daily at 07:00 AM in local timezone (0 7 * * *)
   cron.schedule('0 7 * * *', async () => {
-    console.log(`[Cron] Running daily 07:00 AM birthday reminder check in ${cronTimezone}...`);
-    
-    const config = getEmailConfig();
-    if (!config.masterReminder) {
-      console.log('[Cron] Master reminders are disabled in settings. Skipping.');
-      return;
-    }
-
-    try {
-      const birthdays = db.prepare('SELECT * FROM birthdays WHERE reminder_enabled = 1').all();
-      
-      for (const birthday of birthdays) {
-        const daysUntil = calculateDaysUntil(birthday.date);
-        const targetAlertDays = parseInt(birthday.remind_days_before !== undefined ? birthday.remind_days_before : 2, 10);
-        
-        // Trigger on the configured advance alert days (e.g. 2, 3, 5 days) or today (0 days)
-        if (daysUntil === targetAlertDays || daysUntil === 0) {
-          console.log(`[Cron 07:00 AM] Triggering ${daysUntil === 0 ? 'Today' : targetAlertDays + '-day advance'} notification for ${birthday.name}...`);
-          await sendBirthdayReminder(birthday, [], daysUntil);
-        }
-      }
-    } catch (error) {
-      console.error('[Cron] Error running daily 07:00 AM birthday cron:', error);
-    }
+    console.log(`[Cron 07:00 AM] Running daily automatic birthday reminder check in ${cronTimezone}...`);
+    await runDailyBirthdayCheck();
   }, {
     timezone: cronTimezone
   });
@@ -1132,6 +1168,7 @@ module.exports = {
   sendBirthdayReminder,
   sendTestEmail,
   startCronJob,
+  runDailyBirthdayCheck,
   generateBirthdayPersonWishEmailHtml,
   generateCircleIntimationEmailHtml,
   calculateDaysUntil
