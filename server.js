@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const db = require('./db'); // Initializes DB
 const emailService = require('./services/emailService');
 
