@@ -3,13 +3,31 @@ const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
 
-const dbPath = path.join(__dirname, 'database.db');
+const isVercel = !!process.env.VERCEL;
+const dbDir = isVercel ? '/tmp' : __dirname;
+const dbPath = path.join(dbDir, 'database.db');
+
+// If on Vercel and existing database.db exists in repo root, copy to /tmp if not present
+if (isVercel) {
+  const rootDbPath = path.join(__dirname, 'database.db');
+  if (!fs.existsSync(dbPath) && fs.existsSync(rootDbPath)) {
+    try {
+      fs.copyFileSync(rootDbPath, dbPath);
+    } catch (e) {
+      console.warn('[DB] Could not copy database to /tmp:', e.message);
+    }
+  }
+}
+
 const db = new Database(dbPath);
 
-const uploadsDir = path.join(__dirname, 'uploads');
+const uploadsDir = isVercel ? path.join('/tmp', 'uploads') : path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
+
+db.uploadsDir = uploadsDir;
+db.dbPath = dbPath;
 
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');

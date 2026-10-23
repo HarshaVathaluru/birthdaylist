@@ -9,7 +9,11 @@ const emailService = require('../services/emailService');
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/')
+    const dest = (db && db.uploadsDir) ? db.uploadsDir : (process.env.VERCEL ? path.join('/tmp', 'uploads') : 'uploads/');
+    if (!fs.existsSync(dest)) {
+      fs.mkdirSync(dest, { recursive: true });
+    }
+    cb(null, dest);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
@@ -304,8 +308,9 @@ router.put('/:id', authenticateToken, upload.single('photo'), (req, res) => {
   let photo = existing.photo;
   if (req.file) {
     photo = req.file.filename;
-    if (existing.photo) {
-      const oldPath = path.join(__dirname, '..', 'uploads', existing.photo);
+    if (existing.photo && !existing.photo.startsWith('http')) {
+      const uploadsPath = (db && db.uploadsDir) ? db.uploadsDir : (process.env.VERCEL ? path.join('/tmp', 'uploads') : path.join(__dirname, '..', 'uploads'));
+      const oldPath = path.join(uploadsPath, existing.photo.replace(/^\/+/, '').replace(/^uploads\//, ''));
       if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
     }
   }
@@ -345,8 +350,9 @@ router.delete('/:id', authenticateToken, (req, res) => {
 
   try {
     db.prepare('DELETE FROM birthdays WHERE id = ?').run(id);
-    if (existing.photo) {
-      const oldPath = path.join(__dirname, '..', 'uploads', existing.photo);
+    if (existing.photo && !existing.photo.startsWith('http')) {
+      const uploadsPath = (db && db.uploadsDir) ? db.uploadsDir : (process.env.VERCEL ? path.join('/tmp', 'uploads') : path.join(__dirname, '..', 'uploads'));
+      const oldPath = path.join(uploadsPath, existing.photo.replace(/^\/+/, '').replace(/^uploads\//, ''));
       if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
     }
     res.json({ success: true });

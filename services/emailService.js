@@ -951,9 +951,10 @@ async function sendBirthdayReminder(birthday, recipients = [], daysUntil, custom
   }
 
   const attachments = [];
-  if (birthday.photo) {
-    const photoFilename = birthday.photo.replace(/^\/uploads\//, '');
-    const photoPath = path.join(__dirname, '..', 'uploads', photoFilename);
+  if (birthday.photo && !birthday.photo.startsWith('http')) {
+    const photoFilename = birthday.photo.replace(/^\/+/, '').replace(/^uploads\//, '');
+    const uploadsPath = (db && db.uploadsDir) ? db.uploadsDir : (process.env.VERCEL ? path.join('/tmp', 'uploads') : path.join(__dirname, '..', 'uploads'));
+    const photoPath = path.join(uploadsPath, photoFilename);
     if (fs.existsSync(photoPath)) {
       attachments.push({
         filename: photoFilename,

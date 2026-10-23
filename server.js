@@ -19,7 +19,11 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Static directories
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+const uploadsDir = (db && db.uploadsDir) ? db.uploadsDir : (process.env.VERCEL ? path.join('/tmp', 'uploads') : path.join(__dirname, 'uploads'));
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+app.use('/uploads', express.static(uploadsDir));
 
 const { router: messagesRoutes, purgeOldMessages } = require('./routes/messages');
 
@@ -58,10 +62,12 @@ app.use('/api/circle-members', circleMembersRoutes);
 app.use('/api/memories', memoriesRoutes);
 app.use('/api/ai', aiRoutes);
 
-// Start Cron Job & 3-Day Message Auto-Clear Policy
-emailService.startCronJob();
-purgeOldMessages();
-setInterval(purgeOldMessages, 60 * 60 * 1000); // Check and purge expired messages hourly
+// Start Cron Job & 3-Day Message Auto-Clear Policy (Runs in persistent servers like Render/VPS)
+if (require.main === module && !process.env.VERCEL) {
+  emailService.startCronJob();
+  purgeOldMessages();
+  setInterval(purgeOldMessages, 60 * 60 * 1000); // Check and purge expired messages hourly
+}
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -69,7 +75,11 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-  console.log(`API Endpoints available at http://localhost:${PORT}/api`);
-});
+if (require.main === module && !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`API Endpoints available at http://localhost:${PORT}/api`);
+  });
+}
+
+module.exports = app;
