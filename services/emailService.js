@@ -245,7 +245,7 @@ function getAppBaseUrl() {
   } catch (e) {}
   if (process.env.APP_URL) return process.env.APP_URL.replace(/\/+$/, '');
   if (process.env.RENDER_EXTERNAL_URL) return process.env.RENDER_EXTERNAL_URL.replace(/\/+$/, '');
-  return 'http://localhost:3000';
+  return 'https://birthdaylist-one.vercel.app';
 }
 
 // ============================================================================
@@ -1172,5 +1172,6 @@ module.exports = {
   runDailyBirthdayCheck,
   generateBirthdayPersonWishEmailHtml,
   generateCircleIntimationEmailHtml,
-  calculateDaysUntil
+  calculateDaysUntil,
+  getAppBaseUrl
 };

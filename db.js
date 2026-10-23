@@ -127,6 +127,7 @@ function initDefaultSettings() {
       insertOrReplace.run('resend_api_key', defaultKey);
       insertOrReplace.run('brevo_api_key', defaultKey);
     }
+    insertOrReplace.run('app_url', process.env.APP_URL || 'https://birthdaylist-one.vercel.app');
     insertOrReplace.run('from_email', process.env.FROM_EMAIL || 'zenitudecelebrations@gmail.com');
     insertOrReplace.run('from_name', process.env.FROM_NAME || 'Zenitude Celebrations');
     insertOrReplace.run('smtp_host', process.env.SMTP_HOST || 'smtp.gmail.com');
